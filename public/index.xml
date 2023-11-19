@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>A dismal take</title>
+    <link>https://ismailov.uk/</link>
+    <description>Recent content on A dismal take</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-gb</language>
+    <lastBuildDate>Thu, 25 Aug 2022 21:30:04 +0800</lastBuildDate>
+    <atom:link href="https://ismailov.uk/index.xml" rel="self" type="application/rss+xml" />
+  </channel>
+</rss>
