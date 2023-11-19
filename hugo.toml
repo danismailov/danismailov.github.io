@@ -1,0 +1,4 @@
+baseURL = 'https://ismailov.uk/'
+languageCode = 'en-gb'
+title = 'A dismal take'
+theme = 'no-style'
