@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Dismal takes</title>
-    <link>https://danismailov.github.io/</link>
-    <description>Recent content on Dismal takes</description>
+    <title>Posts on Dismal takes</title>
+    <link>https://danismailov.github.io/posts/</link>
+    <description>Recent content in Posts on Dismal takes</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-gb</language>
-    <lastBuildDate>Thu, 25 Aug 2022 21:30:04 +0800</lastBuildDate>
-    <atom:link href="https://danismailov.github.io/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Thu, 25 Jan 2024 20:47:43 +0000</lastBuildDate>
+    <atom:link href="https://danismailov.github.io/posts/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Teaching learning machines football pt.1</title>
       <link>https://danismailov.github.io/posts/teaching-learning-machines-football/</link>
