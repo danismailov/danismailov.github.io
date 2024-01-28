@@ -6,6 +6,8 @@ draft = false
 
 ### *How I tried to satisfy my FPL obsession by trying to gain an unfair advantage through AI: Part 1 – The Setup*
 
+![pixelated-football](football.png)
+
 &nbsp;
 ***
 &nbsp;
@@ -172,7 +174,7 @@ Luckily for me, I already knew of a wise companion called [ChatGPT](https://chat
 
 Whether quickly plotting graphs in matplotlib or seaborn; providing in-depth explanations of different metrics to let you know how well a model is performing; or refactoring code to be more performant, I can’t emphasise how much of a help ChatGPT has been, and it meant I’d trained my first model in a matter of days instead of a matter of months.
 
-*[I’ll eventually follow up with a post on how to use ChatGPT effectively as a coding buddy and mentor, but I’ve included a few example prompts I used at the end.]*
+*[I’ll eventually follow up with a post on how to use ChatGPT effectively as a coding buddy and mentor, and I’ve included a few example prompts I used in the next post.]*
 
 ### The idiot-proof machine learning library
 
