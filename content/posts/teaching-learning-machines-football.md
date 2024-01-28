@@ -6,7 +6,7 @@ draft = false
 
 ### *How I tried to satisfy my FPL obsession by trying to gain an unfair advantage through AI: Part 1 – The Setup*
 
-![pixelated-football](football.png)
+*See the accompanying Github repo [here](https://github.com/danismailov/fpl-with-fml).*
 
 &nbsp;
 ***
@@ -20,7 +20,7 @@ A wedding that, despite my persistent disorganisation, I’m hopeful my partner 
 
 I get an idea. A simple idea, which every single person who straddles the worlds of football and data, has had – 
 
-*“Why don’t I just automate FPL using AI?”*
+*“Why don’t I just automate my FPL using AI?”*
 
 &nbsp;
 ***
@@ -42,7 +42,7 @@ If you’re curious about football and data, I hope this saves you some time in 
 
 &nbsp; 
 
-*(If you’re just here to see results, see the Github repo here.)*
+*(If you’re just here to see results, you can see them [here](https://github.com/danismailov/fpl-with-fml).)*
 
 &nbsp;
 ***
@@ -192,9 +192,9 @@ Lastly, as I was browsing through a few other people’s attempts at the same ch
 
 # The pipeline so far
 
-Put all the above together, and we have the set-up needed to train our very own football-learning machine monster.
+Put all the above together, and we have the setup needed to train our very own football-learning machine monster.
 
-Here's the rough pipeline of our set-up so far:
+Here's the rough pipeline of our setup so far:
 
 &nbsp;
 
