@@ -8,9 +8,7 @@ draft = false
 
 *See the accompanying Github repo [here](https://github.com/danismailov/fpl-with-fml).*
 
-&nbsp;
-***
-&nbsp;
+![Football](football.png)
 
 Gameweek 16. 
 
@@ -32,7 +30,7 @@ A few weeks later, here we are.
 
 - No basic automaton to take the reins, while I focus on floral arrangements and paper thickness for wedding invites.
 
-- Many hours sunk; with many more decisions still to be made about the wedding.
+- Many hours sunk; many more decisions yet to be made about the wedding.
 
 &nbsp;
 
@@ -50,7 +48,9 @@ If you’re curious about football and data, I hope this saves you some time in 
 
 # The aim
 
-Before getting into any game mechanics like selecting players, we need to map out the core functionality: how can you predict how many points each player will get, in the next gameweek?
+To actually have this fully running an FPL team, we'll have to optimise for the more complex game mechanics, like points per £ spent (as there's a limit on budget), or take account of performances that are untypical of that player from previous seasons.
+
+Before getting into that, however, we can start with the simplest functionality: how can you predict how many points each player will get, in the next gameweek?
 
 If I knew how many goals are scored; red and yellow cards are picked up; or anything else from this gameweek, it’s very easy to guess (or calculate) the points. 
 
@@ -58,7 +58,7 @@ What we need to do here, however, is figure out how we can use data from *last w
 
 So specifically, we need to predict FPL points *ahead of time*, and the model can't have be trained on data that it wouldn't be able to know (such as current gameweek data), when making predictions.
 
-To get an idea of how good our predictions are, the Fantasy Premier League API also has a value called *xP* (expected points) per player per gameweek, which gives us a perfect benchmark to compare our results to and try to beat. 
+To get an idea of how good our predictions are, the Fantasy Premier League also has a value called *xP* (expected points) per player per gameweek, which gives us a perfect benchmark to try to beat.
 
 &nbsp;
 ***
