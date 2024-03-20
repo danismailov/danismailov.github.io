@@ -320,8 +320,11 @@ Running this function gives us an updated dataframe (table) of training data, ex
 
 Using the logic and approach we outlined above, we've almost ***quadrupled*** the number of columns to a comprehensive set of 157 features, and we now have some training data to train our model on! 
 
-### *Next time*
-In the next post, we'll finally train *our first machine learning model*. We'll tweak our training data based on early results, before starting to think about ***hyperparameters*** and how they can affect the outcome.
+*(You may have spotted there's a few `NaN` (meaning "not a number") or `None` values above, but we'll come onto cleaning the data in the next post.)*
+
+### *The rest of the season..*
+Next time, you'll finally train ✨***my first machine learning model***™️✨. 
+We'll tweak our training data based on early results, before starting to think about ***hyperparameters*** and how they can affect the outcome.
 
 ₕₒw ₑₓcᵢₜᵢₙg!
 
