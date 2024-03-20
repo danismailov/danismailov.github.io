@@ -9,6 +9,15 @@
     <lastBuildDate>Thu, 25 Aug 2022 21:30:04 +0800</lastBuildDate>
     <atom:link href="https://danismailov.github.io/index.xml" rel="self" type="application/rss+xml" />
     <item>
+      <title>Teaching learning machines football pt.2</title>
+      <link>https://danismailov.github.io/posts/teaching-learning-machines-football-pt2/</link>
+      <pubDate>Mon, 18 Mar 2024 12:16:53 +0000</pubDate>
+      <guid>https://danismailov.github.io/posts/teaching-learning-machines-football-pt2/</guid>
+      <description>Getting our data in shape and finding our feet with features: deciding what training data we want to train our model on See the accompanying Github repo here and the previous blog post here.
+This is the second post in a series of me stumbling through my machine learning journey, using the medium of Fantasy Premier League.
+In the last post, we ran through the set-up we&amp;rsquo;ll use to train a machine learning model on FPL data.</description>
+    </item>
+    <item>
       <title>Teaching learning machines football pt.1</title>
       <link>https://danismailov.github.io/posts/teaching-learning-machines-football/</link>
       <pubDate>Thu, 25 Jan 2024 20:47:43 +0000</pubDate>
