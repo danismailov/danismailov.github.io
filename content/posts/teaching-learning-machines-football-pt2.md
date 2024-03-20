@@ -221,7 +221,7 @@ As you can probably already tell, there's a few assumptions I've gone with that 
 
 - Knowing how much a player's performance varies, through the use of statistical measures such as ***mean*** and ***standard deviation***, is also helpful to get an indication of consistency.
 
-- Lastly, while individual performance is important, it's helpful context to know how their team has also prformed, in terms of clean sheets, goals scored, and goals conceded. This also probably has a psychological impact on individual performance. 
+- Lastly, while individual performance is important, it's helpful context to know how their team has also performed, in terms of clean sheets, goals scored, and goals conceded. This also probably has a psychological impact on individual performance. 
 
 
 ### *How do we know how useful each stat actually is for prediction?*
