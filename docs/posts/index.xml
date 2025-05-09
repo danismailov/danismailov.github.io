@@ -1,10 +1,26 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Posts on Dismal takes</title><link>https://danismailov.github.io/posts/</link><description>Recent content in Posts on Dismal takes</description><generator>Hugo</generator><language>en-gb</language><lastBuildDate>Mon, 18 Mar 2024 12:16:53 +0000</lastBuildDate><atom:link href="https://danismailov.github.io/posts/index.xml" rel="self" type="application/rss+xml"/><item><title>Teaching learning machines football pt.2</title><link>https://danismailov.github.io/posts/teaching-learning-machines-football-pt2/</link><pubDate>Mon, 18 Mar 2024 12:16:53 +0000</pubDate><guid>https://danismailov.github.io/posts/teaching-learning-machines-football-pt2/</guid><description>&lt;h3 id="getting-our-data-in-shape-and-finding-our-feet-with-features-deciding-what-training-data-we-want-to-train-our-model-on">&lt;em>Getting our data in shape and finding our feet with features: deciding what training data we want to train our model on&lt;/em>&lt;/h3>
-&lt;p>&lt;em>See the accompanying Github repo &lt;a href="https://github.com/danismailov/fpl-with-fml">here&lt;/a> and the previous blog post &lt;a href="https://danismailov.github.io/posts/teaching-learning-machines-football">here&lt;/a>.&lt;/em>&lt;/p>
-&lt;p>&lt;img src="player.png" alt="Football player">&lt;/p>
-&lt;p>This is the second post in a series of me stumbling through my machine learning journey, using the medium of Fantasy Premier League.&lt;/p>
-&lt;p>In the last post, we ran through the set-up we&amp;rsquo;ll use to train a machine learning model on FPL data. We’re using &lt;a href="https://github.com/vaastav/Fantasy-Premier-League/tree/master">Vaastav’s Github repo&lt;/a> for the raw data; a leading AutoML library called &lt;a href="https://autogluon.github.io/neurips-autogluon-workshop/">AutoGluon&lt;/a> for the models; and a free &lt;a href="https://colab.google/">Google Colab&lt;/a> notebook for the compute needed for training.&lt;/p></description></item><item><title>Teaching learning machines football pt.1</title><link>https://danismailov.github.io/posts/teaching-learning-machines-football/</link><pubDate>Thu, 25 Jan 2024 20:47:43 +0000</pubDate><guid>https://danismailov.github.io/posts/teaching-learning-machines-football/</guid><description>&lt;h3 id="how-i-tried-to-satisfy-my-fpl-obsession-by-trying-to-gain-an-unfair-advantage-through-ai-part-1--the-setup">&lt;em>How I tried to satisfy my FPL obsession by trying to gain an unfair advantage through AI: Part 1 – The Setup&lt;/em>&lt;/h3>
-&lt;p>&lt;em>See the accompanying Github repo &lt;a href="https://github.com/danismailov/fpl-with-fml">here&lt;/a>.&lt;/em>&lt;/p>
-&lt;p>&lt;img src="football.png" alt="Football">&lt;/p>
-&lt;p>Gameweek 16.&lt;/p>
-&lt;p>I’m midway through a season-long Fantasy Premier League (FPL) ban, which, in theory, should have won me back a few hours per week to plan a wedding.&lt;/p>
-&lt;p>A wedding that, despite my persistent disorganisation, I’m hopeful my partner will still allow me to attend.&lt;/p></description></item></channel></rss>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Posts on Dismal takes</title>
+    <link>https://danismailov.github.io/posts/</link>
+    <description>Recent content in Posts on Dismal takes</description>
+    <generator>Hugo</generator>
+    <language>en-gb</language>
+    <lastBuildDate>Mon, 18 Mar 2024 12:16:53 +0000</lastBuildDate>
+    <atom:link href="https://danismailov.github.io/posts/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Teaching learning machines football pt.2</title>
+      <link>https://danismailov.github.io/posts/teaching-learning-machines-football-pt2/</link>
+      <pubDate>Mon, 18 Mar 2024 12:16:53 +0000</pubDate>
+      <guid>https://danismailov.github.io/posts/teaching-learning-machines-football-pt2/</guid>
+      <description>&lt;h3 id=&#34;getting-our-data-in-shape-and-finding-our-feet-with-features-deciding-what-training-data-we-want-to-train-our-model-on&#34;&gt;&lt;em&gt;Getting our data in shape and finding our feet with features: deciding what training data we want to train our model on&lt;/em&gt;&lt;/h3&gt;&#xA;&lt;p&gt;&lt;em&gt;See the accompanying Github repo &lt;a href=&#34;https://github.com/danismailov/fpl-with-fml&#34;&gt;here&lt;/a&gt; and the previous blog post &lt;a href=&#34;https://danismailov.github.io/posts/teaching-learning-machines-football&#34;&gt;here&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;&#xA;&lt;p&gt;&lt;img src=&#34;player.png&#34; alt=&#34;Football player&#34;&gt;&lt;/p&gt;&#xA;&lt;p&gt;This is the second post in a series of me stumbling through my machine learning journey, using the medium of Fantasy Premier League.&lt;/p&gt;&#xA;&lt;p&gt;In the last post, we ran through the set-up we&amp;rsquo;ll use to train a machine learning model on FPL data. We’re using &lt;a href=&#34;https://github.com/vaastav/Fantasy-Premier-League/tree/master&#34;&gt;Vaastav’s Github repo&lt;/a&gt; for the raw data; a leading AutoML library called &lt;a href=&#34;https://autogluon.github.io/neurips-autogluon-workshop/&#34;&gt;AutoGluon&lt;/a&gt; for the models; and a free &lt;a href=&#34;https://colab.google/&#34;&gt;Google Colab&lt;/a&gt; notebook for the compute needed for training.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Teaching learning machines football pt.1</title>
+      <link>https://danismailov.github.io/posts/teaching-learning-machines-football/</link>
+      <pubDate>Thu, 25 Jan 2024 20:47:43 +0000</pubDate>
+      <guid>https://danismailov.github.io/posts/teaching-learning-machines-football/</guid>
+      <description>&lt;h3 id=&#34;how-i-tried-to-satisfy-my-fpl-obsession-by-trying-to-gain-an-unfair-advantage-through-ai-part-1--the-setup&#34;&gt;&lt;em&gt;How I tried to satisfy my FPL obsession by trying to gain an unfair advantage through AI: Part 1 – The Setup&lt;/em&gt;&lt;/h3&gt;&#xA;&lt;p&gt;&lt;em&gt;See the accompanying Github repo &lt;a href=&#34;https://github.com/danismailov/fpl-with-fml&#34;&gt;here&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;&#xA;&lt;p&gt;&lt;img src=&#34;football.png&#34; alt=&#34;Football&#34;&gt;&lt;/p&gt;&#xA;&lt;p&gt;Gameweek 16.&lt;/p&gt;&#xA;&lt;p&gt;I’m midway through a season-long Fantasy Premier League (FPL) ban, which, in theory, should have won me back a few hours per week to plan a wedding.&lt;/p&gt;&#xA;&lt;p&gt;A wedding that, despite my persistent disorganisation, I’m hopeful my partner will still allow me to attend.&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

@@ -1,143 +1,299 @@
-<!doctype html><html lang=en-gb><head><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1"><link rel=stylesheet href=/css/styles.css><meta name=description content="Getting our data in shape and finding our feet with features: deciding what training data we want to train our model on
+<!DOCTYPE html>
+<html lang="en-gb"><head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="/css/styles.css">
+   <meta name="description" content="Getting our data in shape and finding our feet with features: deciding what training data we want to train our model on
 See the accompanying Github repo here and the previous blog post here.
 
 This is the second post in a series of me stumbling through my machine learning journey, using the medium of Fantasy Premier League.
-In the last post, we ran through the set-up we&rsquo;ll use to train a machine learning model on FPL data. We’re using Vaastav’s Github repo for the raw data; a leading AutoML library called AutoGluon for the models; and a free Google Colab notebook for the compute needed for training."><title>Teaching learning machines football pt.2
-</title><link rel="shortcut icon" type=image/x-icon href=/></head><body a=auto><main class=page-content aria-label=Content><div class=w><a href=/>Данияр ⇄ Dani</a>
-<span style=float:right><time datetime="2024-03-18 12:16:53 +0000 UTC">2024-03-18</time></span></br></br></br><article><h1>Teaching learning machines football pt.2</h1><h3 id=getting-our-data-in-shape-and-finding-our-feet-with-features-deciding-what-training-data-we-want-to-train-our-model-on><em>Getting our data in shape and finding our feet with features: deciding what training data we want to train our model on</em></h3><p><em>See the accompanying Github repo <a href=https://github.com/danismailov/fpl-with-fml>here</a> and the previous blog post <a href=/posts/teaching-learning-machines-football>here</a>.</em></p><p><img src=player.png alt="Football player"></p><p>This is the second post in a series of me stumbling through my machine learning journey, using the medium of Fantasy Premier League.</p><p>In the last post, we ran through the set-up we&rsquo;ll use to train a machine learning model on FPL data. We’re using <a href=https://github.com/vaastav/Fantasy-Premier-League/tree/master>Vaastav’s Github repo</a> for the raw data; a leading AutoML library called <a href=https://autogluon.github.io/neurips-autogluon-workshop/>AutoGluon</a> for the models; and a free <a href=https://colab.google/>Google Colab</a> notebook for the compute needed for training.</p><p>Using the <code>get_training_data</code> function, we&rsquo;ve already downloaded per-gameweek stats from previous seasons for each player, as a starting point for our <em><strong>training data</strong></em>.</p><p>This time, we’re going to be playing kick-about with our mystic ball to figure out <em><strong>features</strong></em>: the footballing stats we think offer the most predictive power.</p><p> </p><p> </p><hr><p> </p><h2 id=what-do-we-mean-by-training-data>What do we mean by <em>training data</em>?</h2><p>As with any supervised learning task in ML, we&rsquo;ll be splitting the available data we have into two parts: <em><strong>training data</strong></em> and <em><strong>test data</strong></em>.</p><p><em><strong>Training data</strong></em>, as you may have guessed, is the data we use to train our machine learning model. We provide this with the true values we want the model to predict, called the <em><strong>label</strong></em> (<code>total_points</code> in our case), so it learns the relationship between the results and the data. If things go well, it learns to output those same results from the features during training.</p><p>In simpler terms, we give the model the training data with the answers, like a marked practice exam, to teach it how to work them out.</p><p><em><strong>Test data</strong></em>, on the other hand, is the data we use once the model has been trained, to see how well it works. We get the model to predict <code>total_points</code> for each of the players per-gameweek in the test data, <em>without giving it the answers</em>, to see how accurate it is compared to the true <code>total_points</code>.</p><p>Using the same analogy, test data is like a new exam it&rsquo;s never seen before, without any answers, which we use to see how well it has learned.</p><p>Our aim is to predict the number of FPL points that each player will get in the gameweek ahead, which means that <code>total_points</code> is our <em><strong>label</strong></em>: the true result we&rsquo;ll compare the model&rsquo;s output against.</p><p> </p><p> </p><hr><p> </p><h2 id=a-recap-on-our-raw-gameweek-level-data>A recap on our raw gameweek-level data</h2><p>Once we run the <code>get_training_data</code> function from the <a href=/posts/teaching-learning-machines-football>previous post</a>, we get structured gameweek-level data in a single Pandas dataframe.</p><p>If we specify our training data to mean the four seasons from 2019-20 to 2022-23, the output table looks something like this:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-markdown data-lang=markdown><span style=display:flex><span>                           name assists bonus bps clean_sheets  creativity element fixture goals_conceded goals_scored  ... 
-</span></span><span style=display:flex><span>0           Aaron_Cresswell_376       0     0   7            0         1.5     376       8              5            0  ... 
-</span></span><span style=display:flex><span>1              Aaron_Lennon_430       0     0   3            0         0.0     430       3              0            0  ... 
-</span></span><span style=display:flex><span>2                Aaron_Mooy_516       0     0   0            0         0.0     516       7              0            0  ... 
-</span></span><span style=display:flex><span>3            Aaron_Ramsdale_494       0     0  11            0         0.0     494       2              1            0  ... 
-</span></span><span style=display:flex><span>4         Aaron_Wan-Bissaka_122       0     2  34            1        16.1     122       9              0            0  ... 
-</span></span><span style=display:flex><span>...                         ...     ...   ...  ..          ...         ...     ...     ...            ...          ...  ... 
-</span></span><span style=display:flex><span>92868              Oliver Skipp       0     0  16            0         0.0     441     377              1            0  ... 
-</span></span><span style=display:flex><span>92869            Ryan Sessegnon       0     0   0            0         0.0     436     377              0            0  ... 
-</span></span><span style=display:flex><span>92870              Ashley Young       0     0   0            0         0.0     538     372              0            0  ... 
-</span></span><span style=display:flex><span>92871  Jeremy Sarmiento Morante       0     0   0            0         0.0     119     372              0            0  ... 
-</span></span><span style=display:flex><span>92872            Philip Billing       0     0  15            0         0.0      70     376              1            0  ... 
-</span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span>[92873 rows x 42 columns]
-</span></span></code></pre></div><p>As you can see, it&rsquo;s a fairly big table with ~93,000 rows and 42 columns.</p><p> </p><p> </p><hr><p> </p><h2 id=getting-our-training-data-into-shape->Getting our training data into shape 🔻🔹🔺🔸</h2><p>While we have the beginnings of data to train our model on, let&rsquo;s take a leaf from Pep&rsquo;s book and make sure it&rsquo;s in shape before starting.</p><p>Our training data needs to have all the information the model can use to make a prediction, called our <em><strong>features</strong></em>, sitting on the same row as the answer we want the model to get to, called our <em><strong>label</strong></em>.</p><h3 id=shifting-the-label-back-by-a-week-to-avoid-data-leakage><em>Shifting the label back by a week to avoid data leakage</em></h3><p>In the table above, the stats that each player achieved every gameweek, sit on the same row as that player&rsquo;s <code>total_points</code> <em><strong>for that same gameweek</strong></em>.</p><p>That&rsquo;s not very helpful, as we want to predict the next gameweek&rsquo;s <code>total_points</code> <em><strong>before the next gameweek actually starts</strong></em>.</p><p> 
-<img src=table1.png alt=Table1>
- </p><p>As with any machine learning task, we have to make sure we only train the model on data it would have available at the point of making a prediction in the real world, to prevent what is known as <em><strong>data leakage</strong></em>.</p><p>For this model, the latest data it would have in real world settings, is data from the gameweek before.</p><p>To reflect this, we&rsquo;ll shift our label, <code>total_points</code>, up by 1 week.</p><p><img src=t2.png alt=Table2>
- </p><h6 id=the><em>The <code>shift()</code> function in Pandas does exactly this and shifts a column up or down by a value.</em></h6><h3 id=the-42-raw-stats-from-fpl-we-can-create-our-features-from><em>The 42 raw stats from FPL we can create our features from</em></h3><p>Going back to the table, each of the columns corresponds to a variable you might recognise from Fantasy Premier League:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=display:flex><span>[<span style=color:#e6db74>&#39;name&#39;</span>,                        <span style=color:#75715e># the name of the football player</span>
-</span></span><span style=display:flex><span> <span style=color:#e6db74>&#39;assists&#39;</span>,                     <span style=color:#75715e># the number of assists they got that gameweek</span>
-</span></span><span style=display:flex><span> <span style=color:#e6db74>&#39;bonus&#39;</span>,                       <span style=color:#75715e># the number of bonus points they got that gameweek</span>
-</span></span><span style=display:flex><span> <span style=color:#e6db74>&#39;bps&#39;</span>,                         <span style=color:#75715e># the underlying stat used to calculate bonus points</span>
-</span></span><span style=display:flex><span> <span style=color:#e6db74>&#39;clean_sheets&#39;</span>,                <span style=color:#75715e># the number of assists they got that gameweek</span>
-</span></span><span style=display:flex><span> <span style=color:#e6db74>&#39;creativity&#39;</span>,                  <span style=color:#75715e># the number of assists they got that gameweek</span>
-</span></span><span style=display:flex><span> <span style=color:#e6db74>&#39;element&#39;</span>,                     <span style=color:#75715e># their unique id as a player</span>
-</span></span><span style=display:flex><span> <span style=color:#e6db74>&#39;fixture&#39;</span>,                     <span style=color:#75715e># the id of the fixture</span>
-</span></span><span style=display:flex><span> <span style=color:#e6db74>&#39;goals_conceded&#39;</span>,              <span style=color:#75715e># the number of goals their team conceded that gameweek</span>
-</span></span><span style=display:flex><span> <span style=color:#e6db74>&#39;goals_scored&#39;</span>,                <span style=color:#75715e># the number of goals they scored</span>
-</span></span><span style=display:flex><span> <span style=color:#e6db74>&#39;ict_index&#39;</span>,                   <span style=color:#75715e># FPL&#39;s own index combining influence, creativity and threat</span>
-</span></span><span style=display:flex><span> <span style=color:#e6db74>&#39;influence&#39;</span>,                   <span style=color:#75715e># FPL&#39;s own influence measure</span>
-</span></span><span style=display:flex><span> <span style=color:#e6db74>&#39;kickoff_time&#39;</span>,                <span style=color:#75715e># Kick-off time</span>
-</span></span><span style=display:flex><span> <span style=color:#e6db74>&#39;minutes&#39;</span>,                     <span style=color:#75715e># Number of minutes played by this player this gameweek</span>
-</span></span><span style=display:flex><span> <span style=color:#e6db74>&#39;opponent_team&#39;</span>,               <span style=color:#75715e># Who the opponent team was this gameweek</span>
-</span></span><span style=display:flex><span> <span style=color:#e6db74>&#39;own_goals&#39;</span>,                   <span style=color:#75715e># Number of own goals scored by this player this gameweek</span>
-</span></span><span style=display:flex><span> <span style=color:#e6db74>&#39;penalties_missed&#39;</span>,            <span style=color:#75715e># Number of penalties missed by this player this gameweek</span>
-</span></span><span style=display:flex><span> <span style=color:#e6db74>&#39;penalties_saved&#39;</span>,             <span style=color:#75715e># Number of penalties saved by this player this gameweek</span>
-</span></span><span style=display:flex><span> <span style=color:#e6db74>&#39;red_cards&#39;</span>,                   <span style=color:#75715e># Whether this player got a redcard this gameweek</span>
-</span></span><span style=display:flex><span> <span style=color:#e6db74>&#39;round&#39;</span>,                       <span style=color:#75715e># Gameweek number, within the season</span>
-</span></span><span style=display:flex><span> <span style=color:#e6db74>&#39;saves&#39;</span>,                       <span style=color:#75715e># Number of saves by this player this gameweek</span>
-</span></span><span style=display:flex><span> <span style=color:#e6db74>&#39;selected&#39;</span>,                    <span style=color:#75715e># Number of FPL players who selected this player this gameweek</span>
-</span></span><span style=display:flex><span> <span style=color:#e6db74>&#39;team_a_score&#39;</span>,                <span style=color:#75715e># Away team&#39;s goal tally for this game</span>
-</span></span><span style=display:flex><span> <span style=color:#e6db74>&#39;team_h_score&#39;</span>,                <span style=color:#75715e># Home team&#39;s goal tally for this game</span>
-</span></span><span style=display:flex><span> <span style=color:#e6db74>&#39;threat&#39;</span>,                      <span style=color:#75715e># FPL&#39;s own threat measure</span>
-</span></span><span style=display:flex><span> <span style=color:#e6db74>&#39;total_points&#39;</span>,                <span style=color:#75715e># Total number of FPL points this player got this gameweek</span>
-</span></span><span style=display:flex><span> <span style=color:#e6db74>&#39;transfers_balance&#39;</span>,           <span style=color:#75715e># The number of transfers in, versus transfers out, this gameweek</span>
-</span></span><span style=display:flex><span> <span style=color:#e6db74>&#39;transfers_in&#39;</span>,                <span style=color:#75715e># The number of FPL players that transferred this player into their team, this gameweek</span>
-</span></span><span style=display:flex><span> <span style=color:#e6db74>&#39;transfers_out&#39;</span>,               <span style=color:#75715e># The number of FPL players that transferred this player out of their team, this gameweek</span>
-</span></span><span style=display:flex><span> <span style=color:#e6db74>&#39;value&#39;</span>,                       <span style=color:#75715e># The FPL value (in £millions) of this player this gameweek</span>
-</span></span><span style=display:flex><span> <span style=color:#e6db74>&#39;was_home&#39;</span>,                    <span style=color:#75715e># Whether this player was playing this match at home </span>
-</span></span><span style=display:flex><span> <span style=color:#e6db74>&#39;yellow_cards&#39;</span>,                <span style=color:#75715e># The number of yellow cards received by this player this gameweek</span>
-</span></span><span style=display:flex><span> <span style=color:#e6db74>&#39;opponent&#39;</span>,                    <span style=color:#75715e># Who the opposing team was</span>
-</span></span><span style=display:flex><span> <span style=color:#e6db74>&#39;season&#39;</span>,                      <span style=color:#75715e># The Premier League season</span>
-</span></span><span style=display:flex><span> <span style=color:#e6db74>&#39;position&#39;</span>,                    <span style=color:#75715e># What position the player plays in, as per FPL</span>
-</span></span><span style=display:flex><span> <span style=color:#e6db74>&#39;team&#39;</span>,                        <span style=color:#75715e># The player&#39;s team</span>
-</span></span><span style=display:flex><span> <span style=color:#e6db74>&#39;xP&#39;</span>,                          <span style=color:#75715e># The expected FPL points for this player as predicted by the Fantasy Premier League&#39;s own algorithm    </span>
-</span></span><span style=display:flex><span> <span style=color:#e6db74>&#39;expected_assists&#39;</span>,            <span style=color:#75715e># The expected assists accrued by the player this gameweek</span>
-</span></span><span style=display:flex><span> <span style=color:#e6db74>&#39;expected_goal_involvements&#39;</span>,  <span style=color:#75715e># The expected goal involvements for the player this gameweek</span>
-</span></span><span style=display:flex><span> <span style=color:#e6db74>&#39;expected_goals&#39;</span>,              <span style=color:#75715e># The expected goals conceded accrued by the player this gameweek</span>
-</span></span><span style=display:flex><span> <span style=color:#e6db74>&#39;expected_goals_conceded&#39;</span>,     <span style=color:#75715e># The expected goals conceded accrued by the player&#39;s team this gameweek</span>
-</span></span><span style=display:flex><span> <span style=color:#e6db74>&#39;starts&#39;</span>]                      <span style=color:#75715e># The number of starts by this player this gameweek</span>
-</span></span></code></pre></div><p>This might already look like a hefty list, but we want to start off broad and give our model more than one gameweek&rsquo;s worth of data, as that makes it impossible to tell how any player is doing in terms of <strong>recent form</strong>.</p><p>We&rsquo;ll do this by:</p><ol><li>Taking a subset of the above list, and including the previous gameweek&rsquo;s raw stats without transforming them.</li><li>Using that same subset of columns to calculate more features, which might give our model a sense of how players or their teams are performing over time.</li></ol><h3 id=deciding-which-columns-we><em>Deciding which columns we&rsquo;ll transform into features</em></h3><p>Let&rsquo;s start by splitting our starting line-up of stats into two lists:</p><p>The first is called <code>STANDARD_FEATURES</code> and has all of the columns we want to <strong>drop</strong> or <strong>ignore</strong> during training, as either I don&rsquo;t think they have predictive value, or they run the risk of data leakage.</p><p>The second list is called <code>LAST_N_FEATURES</code> and represents all of the raw features we&rsquo;ll be transforming into our training data:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=display:flex><span><span style=color:#75715e># Features we won&#39;t include</span>
-</span></span><span style=display:flex><span>STANDARD_FEATURES <span style=color:#f92672>=</span> [<span style=color:#e6db74>&#39;name&#39;</span>, <span style=color:#e6db74>&#39;position&#39;</span>, <span style=color:#e6db74>&#39;team&#39;</span>, <span style=color:#e6db74>&#39;opponent_team&#39;</span>, 
-</span></span><span style=display:flex><span>                    <span style=color:#e6db74>&#39;round&#39;</span>, <span style=color:#e6db74>&#39;total_points&#39;</span>, <span style=color:#e6db74>&#39;season&#39;</span>, <span style=color:#e6db74>&#39;xP&#39;</span>]
-</span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span><span style=color:#75715e># Features we want to transform into our eventual training data</span>
-</span></span><span style=display:flex><span>LAST_N_FEATURES <span style=color:#f92672>=</span> [<span style=color:#e6db74>&#39;assists&#39;</span>, <span style=color:#e6db74>&#39;bonus&#39;</span>, <span style=color:#e6db74>&#39;bps&#39;</span>, <span style=color:#e6db74>&#39;clean_sheets&#39;</span>, <span style=color:#e6db74>&#39;creativity&#39;</span>, 
-</span></span><span style=display:flex><span>                  <span style=color:#e6db74>&#39;expected_assists&#39;</span>, <span style=color:#e6db74>&#39;expected_goal_involvements&#39;</span>, <span style=color:#e6db74>&#39;expected_goals&#39;</span>, 
-</span></span><span style=display:flex><span>                  <span style=color:#e6db74>&#39;expected_goals_conceded&#39;</span>, <span style=color:#e6db74>&#39;goals_conceded&#39;</span>, <span style=color:#e6db74>&#39;goals_scored&#39;</span>, 
-</span></span><span style=display:flex><span>                  <span style=color:#e6db74>&#39;influence&#39;</span>, <span style=color:#e6db74>&#39;minutes&#39;</span>, <span style=color:#e6db74>&#39;own_goals&#39;</span>, <span style=color:#e6db74>&#39;penalties_missed&#39;</span>, 
-</span></span><span style=display:flex><span>                  <span style=color:#e6db74>&#39;penalties_saved&#39;</span>, <span style=color:#e6db74>&#39;red_cards&#39;</span>, <span style=color:#e6db74>&#39;saves&#39;</span>, <span style=color:#e6db74>&#39;selected&#39;</span>, <span style=color:#e6db74>&#39;threat&#39;</span>, 
-</span></span><span style=display:flex><span>                  <span style=color:#e6db74>&#39;total_points&#39;</span>, <span style=color:#e6db74>&#39;transfers_balance&#39;</span>, <span style=color:#e6db74>&#39;transfers_in&#39;</span>, <span style=color:#e6db74>&#39;transfers_out&#39;</span>, 
-</span></span><span style=display:flex><span>                  <span style=color:#e6db74>&#39;value&#39;</span>, <span style=color:#e6db74>&#39;yellow_cards&#39;</span>, <span style=color:#e6db74>&#39;xP&#39;</span>, <span style=color:#e6db74>&#39;total_points&#39;</span>]
-</span></span></code></pre></div><h3 id=deciding-on-how-we><em>Deciding on how we&rsquo;ll transform the data</em></h3><p>We now need to decide on an approach that gives us a reasonably broad set of features for our training data.</p><p>We can start by looking at the types of feature that are available to us. All of the features I&rsquo;ve used fall into one of the four buckets below:</p><p> </p><ol><li><em><strong>RAW FEATURES</strong></em>: where the data is taken directly from the raw gameweek-level data, e.g. <em>&ldquo;the number of goals scored that gameweek.&rdquo;</em></li></ol><p><img src=raw_features.png alt="Raw features">
- </p><p> </p><ol start=2><li><em><strong>MOVING AVERAGES</strong></em>: where we take a moving average from a consistent time window e.g. <em>&ldquo;the average number of goals from the past 3 gameweeks.&rdquo;</em></li></ol><p><img src=ma.png alt="Moving averages">
- </p><p> </p><ol start=3><li><em><strong>LAGGED FEATURES</strong></em>: where we take a value from a fixed timeframe in the past, e.g. <em>&ldquo;the number of goals scored from 1 gameweek ago.&rdquo;</em></li></ol><p><img src=lagged_features.png alt="Moving averages">
- </p><p> </p><ol start=4><li><em><strong>OTHER STATISTICAL FEATURES</strong></em>: for example <em>&ldquo;the standard deviation of goals in the past 3 gameweeks.&rdquo;</em></li></ol><h3 id=starting-assumptions-for-our-features><em>Starting assumptions for our features</em></h3><p>As you can probably already tell, there&rsquo;s a few assumptions I&rsquo;ve gone with that have shaped my approach:</p><ul><li><p>We want lagged raw stats for the previous few gameweeks (especially the last gameweek), as there&rsquo;s probably something in there to do with <em><strong>momentum</strong></em> and <em><strong>form</strong></em>. If someone&rsquo;s played amazingly in the last few gameweeks, they&rsquo;re probably more likely to do so again.</p></li><li><p>Knowing how much a player&rsquo;s performance varies, through the use of statistical measures such as <em><strong>mean</strong></em> and <em><strong>standard deviation</strong></em>, is also helpful to get an indication of consistency.</p></li><li><p>Lastly, while individual performance is important, it&rsquo;s helpful context to know how their team has also performed, in terms of clean sheets, goals scored, and goals conceded. This also probably has a psychological impact on individual performance.</p></li></ul><h3 id=how-do-we-know-how-useful-each-stat-actually-is-for-prediction><em>How do we know how useful each stat actually is for prediction?</em></h3><p>You might already have some inklings yourself about how useful a few of the FPL stats above are. For example:</p><ul><li><p><em><strong>Transfers</strong></em> (both in or out) might be a great proxy for public &ldquo;hunches&rdquo; about players who are outperforming or underperforming their usual form, which isn&rsquo;t always be obvious from the data.</p></li><li><p>On the flip side, <code>penalties_missed</code> isn&rsquo;t very indicative of relative form, as most players across most games wouldn&rsquo;t even dream of taking a penalty, meaning this stat would be a desperately boring 0.</p></li></ul><p>Luckily, there&rsquo;s a scientific way to interpret exactly how much predictive power each feature has called <a href=https://explained.ai/rf-importance/>permutation importance</a>, which we&rsquo;ll come to in the next post after we&rsquo;ve trained our first model. <em>(Yes, that&rsquo;s probably the nerdiest hook you&rsquo;ve ever read, but stay with me..)</em></p><p> </p><p> </p><hr><p> </p><h2 id=calculating-our-features-at-long-last>Calculating our features at long last</h2><p>If you&rsquo;ve made it this far, you&rsquo;ve either got too much time on your hands, or you&rsquo;re not doing as well as you&rsquo;d hoped in your friends&rsquo; FPL league and you&rsquo;re trying to salvage what you can of the season to save face.</p><p>Either way, I&rsquo;m grateful enough to let you know that it&rsquo;s almost over.</p><p>We can finally produce our training data using the below function, called <code>calculate_features</code>, which transforms our chosen columns into our broader set of features I described above:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=display:flex><span><span style=color:#66d9ef>def</span> <span style=color:#a6e22e>calculate_features</span>(all_data):
-</span></span><span style=display:flex><span>    number_of_lags <span style=color:#f92672>=</span> <span style=color:#ae81ff>3</span>  <span style=color:#75715e># Number of weeks for lag features</span>
-</span></span><span style=display:flex><span>    
-</span></span><span style=display:flex><span>    <span style=color:#75715e># Aggregate team-level metrics</span>
-</span></span><span style=display:flex><span>    team_performance <span style=color:#f92672>=</span> all_data<span style=color:#f92672>.</span>groupby([<span style=color:#e6db74>&#39;team&#39;</span>, <span style=color:#e6db74>&#39;season&#39;</span>, <span style=color:#e6db74>&#39;round&#39;</span>])<span style=color:#f92672>.</span>agg({
-</span></span><span style=display:flex><span>        <span style=color:#e6db74>&#39;goals_scored&#39;</span>: <span style=color:#e6db74>&#39;sum&#39;</span>,
-</span></span><span style=display:flex><span>        <span style=color:#e6db74>&#39;goals_conceded&#39;</span>: <span style=color:#e6db74>&#39;sum&#39;</span>,
-</span></span><span style=display:flex><span>        <span style=color:#e6db74>&#39;clean_sheets&#39;</span>: <span style=color:#e6db74>&#39;sum&#39;</span>,
-</span></span><span style=display:flex><span>    })<span style=color:#f92672>.</span>reset_index()
-</span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span>    <span style=color:#75715e># Rename the aggregated columns so they don&#39;t clash with the player-level features</span>
-</span></span><span style=display:flex><span>    team_performance <span style=color:#f92672>=</span> team_performance<span style=color:#f92672>.</span>rename(columns<span style=color:#f92672>=</span>{
-</span></span><span style=display:flex><span>        <span style=color:#e6db74>&#39;goals_scored&#39;</span>: <span style=color:#e6db74>&#39;team_goals_scored&#39;</span>,
-</span></span><span style=display:flex><span>        <span style=color:#e6db74>&#39;goals_conceded&#39;</span>: <span style=color:#e6db74>&#39;team_goals_conceded&#39;</span>,
-</span></span><span style=display:flex><span>        <span style=color:#e6db74>&#39;clean_sheets&#39;</span>: <span style=color:#e6db74>&#39;team_clean_sheets&#39;</span>
-</span></span><span style=display:flex><span>    })
-</span></span><span style=display:flex><span>    
-</span></span><span style=display:flex><span>    <span style=color:#75715e># Create lag features for team performance</span>
-</span></span><span style=display:flex><span>    <span style=color:#66d9ef>for</span> feature <span style=color:#f92672>in</span> [<span style=color:#e6db74>&#39;team_goals_scored&#39;</span>, <span style=color:#e6db74>&#39;team_goals_conceded&#39;</span>, <span style=color:#e6db74>&#39;team_clean_sheets&#39;</span>]: 
-</span></span><span style=display:flex><span>        <span style=color:#66d9ef>for</span> lag <span style=color:#f92672>in</span> range(<span style=color:#ae81ff>1</span>, number_of_lags <span style=color:#f92672>+</span> <span style=color:#ae81ff>1</span>):
-</span></span><span style=display:flex><span>            team_performance[<span style=color:#e6db74>f</span><span style=color:#e6db74>&#39;</span><span style=color:#e6db74>{</span>feature<span style=color:#e6db74>}</span><span style=color:#e6db74>_lag_</span><span style=color:#e6db74>{</span>lag<span style=color:#e6db74>}</span><span style=color:#e6db74>&#39;</span>] <span style=color:#f92672>=</span> team_performance<span style=color:#f92672>.</span>groupby([<span style=color:#e6db74>&#39;team&#39;</span>, <span style=color:#e6db74>&#39;season&#39;</span>])[feature]<span style=color:#f92672>.</span>shift(lag)
-</span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span>    <span style=color:#75715e># Merge team performance with main data</span>
-</span></span><span style=display:flex><span>    all_data <span style=color:#f92672>=</span> pd<span style=color:#f92672>.</span>merge(all_data, team_performance, on<span style=color:#f92672>=</span>[<span style=color:#e6db74>&#39;team&#39;</span>, <span style=color:#e6db74>&#39;season&#39;</span>, <span style=color:#e6db74>&#39;round&#39;</span>], how<span style=color:#f92672>=</span><span style=color:#e6db74>&#39;left&#39;</span>)
-</span></span><span style=display:flex><span>    
-</span></span><span style=display:flex><span>    logger<span style=color:#f92672>.</span>info(list(team_performance<span style=color:#f92672>.</span>columns))
-</span></span><span style=display:flex><span>    logger<span style=color:#f92672>.</span>info(list(all_data<span style=color:#f92672>.</span>columns))
-</span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span>    <span style=color:#75715e># Calculate moving averages and lag features for individual players</span>
-</span></span><span style=display:flex><span>    <span style=color:#66d9ef>for</span> feature <span style=color:#f92672>in</span> LAST_N_FEATURES:
-</span></span><span style=display:flex><span>        <span style=color:#75715e># Create lag features for the last 3 weeks</span>
-</span></span><span style=display:flex><span>        <span style=color:#66d9ef>for</span> lag <span style=color:#f92672>in</span> range(<span style=color:#ae81ff>1</span>, number_of_lags <span style=color:#f92672>+</span> <span style=color:#ae81ff>1</span>):
-</span></span><span style=display:flex><span>            all_data[<span style=color:#e6db74>f</span><span style=color:#e6db74>&#39;</span><span style=color:#e6db74>{</span>feature<span style=color:#e6db74>}</span><span style=color:#e6db74>_lag_</span><span style=color:#e6db74>{</span>lag<span style=color:#e6db74>}</span><span style=color:#e6db74>&#39;</span>] <span style=color:#f92672>=</span> all_data<span style=color:#f92672>.</span>groupby([<span style=color:#e6db74>&#39;name&#39;</span>, <span style=color:#e6db74>&#39;season&#39;</span>])[feature]<span style=color:#f92672>.</span>shift(lag)
-</span></span><span style=display:flex><span>        
-</span></span><span style=display:flex><span>        <span style=color:#75715e># Calculate mean and std dev of the last 3 weeks, lagged by 1 week</span>
-</span></span><span style=display:flex><span>        all_data[<span style=color:#e6db74>f</span><span style=color:#e6db74>&#39;</span><span style=color:#e6db74>{</span>feature<span style=color:#e6db74>}</span><span style=color:#e6db74>_mean_last_3_lag&#39;</span>] <span style=color:#f92672>=</span> all_data[[<span style=color:#e6db74>f</span><span style=color:#e6db74>&#39;</span><span style=color:#e6db74>{</span>feature<span style=color:#e6db74>}</span><span style=color:#e6db74>_lag_</span><span style=color:#e6db74>{</span>lag<span style=color:#e6db74>}</span><span style=color:#e6db74>&#39;</span> <span style=color:#66d9ef>for</span> lag <span style=color:#f92672>in</span> range(<span style=color:#ae81ff>1</span>, number_of_lags <span style=color:#f92672>+</span> <span style=color:#ae81ff>1</span>)]]<span style=color:#f92672>.</span>mean(axis<span style=color:#f92672>=</span><span style=color:#ae81ff>1</span>)<span style=color:#f92672>.</span>shift(<span style=color:#ae81ff>1</span>)
-</span></span><span style=display:flex><span>        all_data[<span style=color:#e6db74>f</span><span style=color:#e6db74>&#39;</span><span style=color:#e6db74>{</span>feature<span style=color:#e6db74>}</span><span style=color:#e6db74>_std_last_3_lag&#39;</span>] <span style=color:#f92672>=</span> all_data[[<span style=color:#e6db74>f</span><span style=color:#e6db74>&#39;</span><span style=color:#e6db74>{</span>feature<span style=color:#e6db74>}</span><span style=color:#e6db74>_lag_</span><span style=color:#e6db74>{</span>lag<span style=color:#e6db74>}</span><span style=color:#e6db74>&#39;</span> <span style=color:#66d9ef>for</span> lag <span style=color:#f92672>in</span> range(<span style=color:#ae81ff>1</span>, number_of_lags <span style=color:#f92672>+</span> <span style=color:#ae81ff>1</span>)]]<span style=color:#f92672>.</span>std(axis<span style=color:#f92672>=</span><span style=color:#ae81ff>1</span>)<span style=color:#f92672>.</span>shift(<span style=color:#ae81ff>1</span>)
-</span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span>    <span style=color:#75715e># Select the relevant columns</span>
-</span></span><span style=display:flex><span>    lag_feature_columns <span style=color:#f92672>=</span> [<span style=color:#e6db74>f</span><span style=color:#e6db74>&#39;</span><span style=color:#e6db74>{</span>feature<span style=color:#e6db74>}</span><span style=color:#e6db74>_lag_</span><span style=color:#e6db74>{</span>lag<span style=color:#e6db74>}</span><span style=color:#e6db74>&#39;</span> <span style=color:#66d9ef>for</span> feature <span style=color:#f92672>in</span> LAST_N_FEATURES <span style=color:#66d9ef>for</span> lag <span style=color:#f92672>in</span> range(<span style=color:#ae81ff>1</span>, number_of_lags <span style=color:#f92672>+</span> <span style=color:#ae81ff>1</span>)]
-</span></span><span style=display:flex><span>    lag_stat_columns <span style=color:#f92672>=</span> [<span style=color:#e6db74>f</span><span style=color:#e6db74>&#39;</span><span style=color:#e6db74>{</span>feature<span style=color:#e6db74>}</span><span style=color:#e6db74>_mean_last_3_lag&#39;</span> <span style=color:#66d9ef>for</span> feature <span style=color:#f92672>in</span> LAST_N_FEATURES] <span style=color:#f92672>+</span> [<span style=color:#e6db74>f</span><span style=color:#e6db74>&#39;</span><span style=color:#e6db74>{</span>feature<span style=color:#e6db74>}</span><span style=color:#e6db74>_std_last_3_lag&#39;</span> <span style=color:#66d9ef>for</span> feature <span style=color:#f92672>in</span> LAST_N_FEATURES]
-</span></span><span style=display:flex><span>    team_lag_feature_columns <span style=color:#f92672>=</span> [<span style=color:#e6db74>f</span><span style=color:#e6db74>&#39;team_</span><span style=color:#e6db74>{</span>feature<span style=color:#e6db74>}</span><span style=color:#e6db74>_lag_</span><span style=color:#e6db74>{</span>lag<span style=color:#e6db74>}</span><span style=color:#e6db74>&#39;</span> <span style=color:#66d9ef>for</span> feature <span style=color:#f92672>in</span> [<span style=color:#e6db74>&#39;goals_scored&#39;</span>, <span style=color:#e6db74>&#39;goals_conceded&#39;</span>, <span style=color:#e6db74>&#39;clean_sheets&#39;</span>] <span style=color:#66d9ef>for</span> lag <span style=color:#f92672>in</span> range(<span style=color:#ae81ff>1</span>, number_of_lags <span style=color:#f92672>+</span> <span style=color:#ae81ff>1</span>)]  
-</span></span><span style=display:flex><span>    
-</span></span><span style=display:flex><span>    <span style=color:#66d9ef>return</span> all_data[STANDARD_FEATURES <span style=color:#f92672>+</span> lag_feature_columns <span style=color:#f92672>+</span> lag_stat_columns <span style=color:#f92672>+</span> team_lag_feature_columns]
-</span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span>training_data <span style=color:#f92672>=</span> calculate_features(all_data)<span style=color:#f92672>.</span>reset_index(drop<span style=color:#f92672>=</span><span style=color:#66d9ef>True</span>)
-</span></span><span style=display:flex><span>training_data<span style=color:#f92672>.</span>to_csv(<span style=color:#e6db74>f</span><span style=color:#e6db74>&#34;training_data.csv&#34;</span>)
-</span></span></code></pre></div><p> </p><p>Running this function gives us an updated dataframe (table) of training data, exported to a .csv, which looks something like this:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-markdown data-lang=markdown><span style=display:flex><span>                           name position         team  opponent_team round total_points  ... team_goals_conceded_lag_1  team_goals_conceded_lag_2 team_goals_conceded_lag_3 team_clean_sheets_lag_1 team_clean_sheets_lag_2 team_clean_sheets_lag_3
-</span></span><span style=display:flex><span>0           Aaron_Cresswell_376      NaN          NaN             11     1            0  ...                      None                       None                      None                    None                    None                    None
-</span></span><span style=display:flex><span>1              Aaron_Lennon_430      NaN          NaN             16     1            1  ...                      None                       None                      None                    None                    None                    None
-</span></span><span style=display:flex><span>2                Aaron_Mooy_516      NaN          NaN             18     1            0  ...                      None                       None                      None                    None                    None                    None
-</span></span><span style=display:flex><span>3            Aaron_Ramsdale_494      NaN          NaN             15     1            2  ...                      None                       None                      None                    None                    None                    None
-</span></span><span style=display:flex><span>4         Aaron_Wan-Bissaka_122      NaN          NaN              6     1            8  ...                      None                       None                      None                    None                    None                    None
-</span></span><span style=display:flex><span>...                         ...      ...          ...            ...   ...          ...  ...                       ...                        ...                       ...                     ...                     ...                     ...
-</span></span><span style=display:flex><span>92868              Oliver Skipp      MID        Spurs             11    38            2  ...                        33                         22                         0                       0                       0                      11
-</span></span><span style=display:flex><span>92869            Ryan Sessegnon      DEF        Spurs             11    38            0  ...                        33                         22                         0                       0                       0                      11
-</span></span><span style=display:flex><span>92870              Ashley Young      DEF  Aston Villa              5    38            0  ...                        11                         11                        11                       2                       2                       0
-</span></span><span style=display:flex><span>92871  Jeremy Sarmiento Morante      MID     Brighton              2    38            0  ...                        22                         44                        55                       0                      10                       0
-</span></span><span style=display:flex><span>92872            Philip Billing      MID  Bournemouth              8    38            2  ...                        11                         22                        33                       0                       0                       0     
-</span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span>[92873 rows x 157 columns]
-</span></span></code></pre></div><p>Using the logic and approach we outlined above, we&rsquo;ve almost <em><strong>quadrupled</strong></em> the number of columns to a comprehensive set of 157 features, and we now have some training data to train our model on!</p><p><em>(You may have spotted there&rsquo;s a few <code>NaN</code> (meaning &ldquo;not a number&rdquo;) or <code>None</code> values above, but we&rsquo;ll come onto cleaning the data in the next post.)</em></p><h3 id=the-rest-of-the-season><em>The rest of the season..</em></h3><p>Next time, you&rsquo;ll finally train ✨<em><strong>my first machine learning model</strong></em>™️✨.
-We&rsquo;ll tweak our training data based on early results, before starting to think about <em><strong>hyperparameters</strong></em> and how they can affect the outcome.</p><p>ₕₒw ₑₓcᵢₜᵢₙg!</p><p> </p></article></div></main></body></html>
+In the last post, we ran through the set-up we&rsquo;ll use to train a machine learning model on FPL data. We’re using Vaastav’s Github repo for the raw data; a leading AutoML library called AutoGluon for the models; and a free Google Colab notebook for the compute needed for training.">  
+
+  <title>
+    
+      Teaching learning machines football pt.2
+    
+  </title>
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/" />
+  
+  
+</head>
+<body a="auto">
+        <main class="page-content" aria-label="Content">
+            <div class="w">
+<a href="/">Данияр ⇄ Dani</a>
+
+<span style="float:right;">
+    <time datetime="2024-03-18 12:16:53 &#43;0000 UTC">
+        2024-03-18
+    </time>
+</span>
+</br>
+</br>
+</br>
+<article>
+
+    <h1>Teaching learning machines football pt.2</h1>
+    
+
+    <h3 id="getting-our-data-in-shape-and-finding-our-feet-with-features-deciding-what-training-data-we-want-to-train-our-model-on"><em>Getting our data in shape and finding our feet with features: deciding what training data we want to train our model on</em></h3>
+<p><em>See the accompanying Github repo <a href="https://github.com/danismailov/fpl-with-fml">here</a> and the previous blog post <a href="/posts/teaching-learning-machines-football">here</a>.</em></p>
+<p><img src="player.png" alt="Football player"></p>
+<p>This is the second post in a series of me stumbling through my machine learning journey, using the medium of Fantasy Premier League.</p>
+<p>In the last post, we ran through the set-up we&rsquo;ll use to train a machine learning model on FPL data. We’re using <a href="https://github.com/vaastav/Fantasy-Premier-League/tree/master">Vaastav’s Github repo</a> for the raw data; a leading AutoML library called <a href="https://autogluon.github.io/neurips-autogluon-workshop/">AutoGluon</a> for the models; and a free <a href="https://colab.google/">Google Colab</a> notebook for the compute needed for training.</p>
+<p>Using the <code>get_training_data</code> function, we&rsquo;ve already downloaded per-gameweek stats from previous seasons for each player, as a starting point for our <em><strong>training data</strong></em>.</p>
+<p>This time, we’re going to be playing kick-about with our mystic ball to figure out <em><strong>features</strong></em>: the footballing stats we think offer the most predictive power.</p>
+<p> </p>
+<p> </p>
+<hr>
+<p> </p>
+<h2 id="what-do-we-mean-by-training-data">What do we mean by <em>training data</em>?</h2>
+<p>As with any supervised learning task in ML, we&rsquo;ll be splitting the available data we have into two parts: <em><strong>training data</strong></em> and <em><strong>test data</strong></em>.</p>
+<p><em><strong>Training data</strong></em>, as you may have guessed, is the data we use to train our machine learning model. We provide this with the true values we want the model to predict, called the <em><strong>label</strong></em> (<code>total_points</code> in our case), so it learns the relationship between the results and the data. If things go well, it learns to output those same results from the features during training.</p>
+<p>In simpler terms, we give the model the training data with the answers, like a marked practice exam, to teach it how to work them out.</p>
+<p><em><strong>Test data</strong></em>, on the other hand, is the data we use once the model has been trained, to see how well it works. We get the model to predict <code>total_points</code> for each of the players per-gameweek in the test data, <em>without giving it the answers</em>, to see how accurate it is compared to the true <code>total_points</code>.</p>
+<p>Using the same analogy, test data is like a new exam it&rsquo;s never seen before, without any answers, which we use to see how well it has learned.</p>
+<p>Our aim is to predict the number of FPL points that each player will get in the gameweek ahead, which means that <code>total_points</code> is our <em><strong>label</strong></em>: the true result we&rsquo;ll compare the model&rsquo;s output against.</p>
+<p> </p>
+<p> </p>
+<hr>
+<p> </p>
+<h2 id="a-recap-on-our-raw-gameweek-level-data">A recap on our raw gameweek-level data</h2>
+<p>Once we run the <code>get_training_data</code> function from the <a href="/posts/teaching-learning-machines-football">previous post</a>, we get structured gameweek-level data in a single Pandas dataframe.</p>
+<p>If we specify our training data to mean the four seasons from 2019-20 to 2022-23, the output table looks something like this:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-markdown" data-lang="markdown"><span style="display:flex;"><span>                           name assists bonus bps clean_sheets  creativity element fixture goals_conceded goals_scored  ... 
+</span></span><span style="display:flex;"><span>0           Aaron_Cresswell_376       0     0   7            0         1.5     376       8              5            0  ... 
+</span></span><span style="display:flex;"><span>1              Aaron_Lennon_430       0     0   3            0         0.0     430       3              0            0  ... 
+</span></span><span style="display:flex;"><span>2                Aaron_Mooy_516       0     0   0            0         0.0     516       7              0            0  ... 
+</span></span><span style="display:flex;"><span>3            Aaron_Ramsdale_494       0     0  11            0         0.0     494       2              1            0  ... 
+</span></span><span style="display:flex;"><span>4         Aaron_Wan-Bissaka_122       0     2  34            1        16.1     122       9              0            0  ... 
+</span></span><span style="display:flex;"><span>...                         ...     ...   ...  ..          ...         ...     ...     ...            ...          ...  ... 
+</span></span><span style="display:flex;"><span>92868              Oliver Skipp       0     0  16            0         0.0     441     377              1            0  ... 
+</span></span><span style="display:flex;"><span>92869            Ryan Sessegnon       0     0   0            0         0.0     436     377              0            0  ... 
+</span></span><span style="display:flex;"><span>92870              Ashley Young       0     0   0            0         0.0     538     372              0            0  ... 
+</span></span><span style="display:flex;"><span>92871  Jeremy Sarmiento Morante       0     0   0            0         0.0     119     372              0            0  ... 
+</span></span><span style="display:flex;"><span>92872            Philip Billing       0     0  15            0         0.0      70     376              1            0  ... 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>[92873 rows x 42 columns]
+</span></span></code></pre></div><p>As you can see, it&rsquo;s a fairly big table with ~93,000 rows and 42 columns.</p>
+<p> </p>
+<p> </p>
+<hr>
+<p> </p>
+<h2 id="getting-our-training-data-into-shape-">Getting our training data into shape 🔻🔹🔺🔸</h2>
+<p>While we have the beginnings of data to train our model on, let&rsquo;s take a leaf from Pep&rsquo;s book and make sure it&rsquo;s in shape before starting.</p>
+<p>Our training data needs to have all the information the model can use to make a prediction, called our <em><strong>features</strong></em>, sitting on the same row as the answer we want the model to get to, called our <em><strong>label</strong></em>.</p>
+<h3 id="shifting-the-label-back-by-a-week-to-avoid-data-leakage"><em>Shifting the label back by a week to avoid data leakage</em></h3>
+<p>In the table above, the stats that each player achieved every gameweek, sit on the same row as that player&rsquo;s <code>total_points</code> <em><strong>for that same gameweek</strong></em>.</p>
+<p>That&rsquo;s not very helpful, as we want to predict the next gameweek&rsquo;s <code>total_points</code> <em><strong>before the next gameweek actually starts</strong></em>.</p>
+<p> 
+<img src="table1.png" alt="Table1">
+ </p>
+<p>As with any machine learning task, we have to make sure we only train the model on data it would have available at the point of making a prediction in the real world, to prevent what is known as <em><strong>data leakage</strong></em>.</p>
+<p>For this model, the latest data it would have in real world settings, is data from the gameweek before.</p>
+<p>To reflect this, we&rsquo;ll shift our label, <code>total_points</code>, up by 1 week.</p>
+<p><img src="t2.png" alt="Table2">
+ </p>
+<h6 id="the"><em>The <code>shift()</code> function in Pandas does exactly this and shifts a column up or down by a value.</em></h6>
+<h3 id="the-42-raw-stats-from-fpl-we-can-create-our-features-from"><em>The 42 raw stats from FPL we can create our features from</em></h3>
+<p>Going back to the table, each of the columns corresponds to a variable you might recognise from Fantasy Premier League:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>[<span style="color:#e6db74">&#39;name&#39;</span>,                        <span style="color:#75715e"># the name of the football player</span>
+</span></span><span style="display:flex;"><span> <span style="color:#e6db74">&#39;assists&#39;</span>,                     <span style="color:#75715e"># the number of assists they got that gameweek</span>
+</span></span><span style="display:flex;"><span> <span style="color:#e6db74">&#39;bonus&#39;</span>,                       <span style="color:#75715e"># the number of bonus points they got that gameweek</span>
+</span></span><span style="display:flex;"><span> <span style="color:#e6db74">&#39;bps&#39;</span>,                         <span style="color:#75715e"># the underlying stat used to calculate bonus points</span>
+</span></span><span style="display:flex;"><span> <span style="color:#e6db74">&#39;clean_sheets&#39;</span>,                <span style="color:#75715e"># the number of assists they got that gameweek</span>
+</span></span><span style="display:flex;"><span> <span style="color:#e6db74">&#39;creativity&#39;</span>,                  <span style="color:#75715e"># the number of assists they got that gameweek</span>
+</span></span><span style="display:flex;"><span> <span style="color:#e6db74">&#39;element&#39;</span>,                     <span style="color:#75715e"># their unique id as a player</span>
+</span></span><span style="display:flex;"><span> <span style="color:#e6db74">&#39;fixture&#39;</span>,                     <span style="color:#75715e"># the id of the fixture</span>
+</span></span><span style="display:flex;"><span> <span style="color:#e6db74">&#39;goals_conceded&#39;</span>,              <span style="color:#75715e"># the number of goals their team conceded that gameweek</span>
+</span></span><span style="display:flex;"><span> <span style="color:#e6db74">&#39;goals_scored&#39;</span>,                <span style="color:#75715e"># the number of goals they scored</span>
+</span></span><span style="display:flex;"><span> <span style="color:#e6db74">&#39;ict_index&#39;</span>,                   <span style="color:#75715e"># FPL&#39;s own index combining influence, creativity and threat</span>
+</span></span><span style="display:flex;"><span> <span style="color:#e6db74">&#39;influence&#39;</span>,                   <span style="color:#75715e"># FPL&#39;s own influence measure</span>
+</span></span><span style="display:flex;"><span> <span style="color:#e6db74">&#39;kickoff_time&#39;</span>,                <span style="color:#75715e"># Kick-off time</span>
+</span></span><span style="display:flex;"><span> <span style="color:#e6db74">&#39;minutes&#39;</span>,                     <span style="color:#75715e"># Number of minutes played by this player this gameweek</span>
+</span></span><span style="display:flex;"><span> <span style="color:#e6db74">&#39;opponent_team&#39;</span>,               <span style="color:#75715e"># Who the opponent team was this gameweek</span>
+</span></span><span style="display:flex;"><span> <span style="color:#e6db74">&#39;own_goals&#39;</span>,                   <span style="color:#75715e"># Number of own goals scored by this player this gameweek</span>
+</span></span><span style="display:flex;"><span> <span style="color:#e6db74">&#39;penalties_missed&#39;</span>,            <span style="color:#75715e"># Number of penalties missed by this player this gameweek</span>
+</span></span><span style="display:flex;"><span> <span style="color:#e6db74">&#39;penalties_saved&#39;</span>,             <span style="color:#75715e"># Number of penalties saved by this player this gameweek</span>
+</span></span><span style="display:flex;"><span> <span style="color:#e6db74">&#39;red_cards&#39;</span>,                   <span style="color:#75715e"># Whether this player got a redcard this gameweek</span>
+</span></span><span style="display:flex;"><span> <span style="color:#e6db74">&#39;round&#39;</span>,                       <span style="color:#75715e"># Gameweek number, within the season</span>
+</span></span><span style="display:flex;"><span> <span style="color:#e6db74">&#39;saves&#39;</span>,                       <span style="color:#75715e"># Number of saves by this player this gameweek</span>
+</span></span><span style="display:flex;"><span> <span style="color:#e6db74">&#39;selected&#39;</span>,                    <span style="color:#75715e"># Number of FPL players who selected this player this gameweek</span>
+</span></span><span style="display:flex;"><span> <span style="color:#e6db74">&#39;team_a_score&#39;</span>,                <span style="color:#75715e"># Away team&#39;s goal tally for this game</span>
+</span></span><span style="display:flex;"><span> <span style="color:#e6db74">&#39;team_h_score&#39;</span>,                <span style="color:#75715e"># Home team&#39;s goal tally for this game</span>
+</span></span><span style="display:flex;"><span> <span style="color:#e6db74">&#39;threat&#39;</span>,                      <span style="color:#75715e"># FPL&#39;s own threat measure</span>
+</span></span><span style="display:flex;"><span> <span style="color:#e6db74">&#39;total_points&#39;</span>,                <span style="color:#75715e"># Total number of FPL points this player got this gameweek</span>
+</span></span><span style="display:flex;"><span> <span style="color:#e6db74">&#39;transfers_balance&#39;</span>,           <span style="color:#75715e"># The number of transfers in, versus transfers out, this gameweek</span>
+</span></span><span style="display:flex;"><span> <span style="color:#e6db74">&#39;transfers_in&#39;</span>,                <span style="color:#75715e"># The number of FPL players that transferred this player into their team, this gameweek</span>
+</span></span><span style="display:flex;"><span> <span style="color:#e6db74">&#39;transfers_out&#39;</span>,               <span style="color:#75715e"># The number of FPL players that transferred this player out of their team, this gameweek</span>
+</span></span><span style="display:flex;"><span> <span style="color:#e6db74">&#39;value&#39;</span>,                       <span style="color:#75715e"># The FPL value (in £millions) of this player this gameweek</span>
+</span></span><span style="display:flex;"><span> <span style="color:#e6db74">&#39;was_home&#39;</span>,                    <span style="color:#75715e"># Whether this player was playing this match at home </span>
+</span></span><span style="display:flex;"><span> <span style="color:#e6db74">&#39;yellow_cards&#39;</span>,                <span style="color:#75715e"># The number of yellow cards received by this player this gameweek</span>
+</span></span><span style="display:flex;"><span> <span style="color:#e6db74">&#39;opponent&#39;</span>,                    <span style="color:#75715e"># Who the opposing team was</span>
+</span></span><span style="display:flex;"><span> <span style="color:#e6db74">&#39;season&#39;</span>,                      <span style="color:#75715e"># The Premier League season</span>
+</span></span><span style="display:flex;"><span> <span style="color:#e6db74">&#39;position&#39;</span>,                    <span style="color:#75715e"># What position the player plays in, as per FPL</span>
+</span></span><span style="display:flex;"><span> <span style="color:#e6db74">&#39;team&#39;</span>,                        <span style="color:#75715e"># The player&#39;s team</span>
+</span></span><span style="display:flex;"><span> <span style="color:#e6db74">&#39;xP&#39;</span>,                          <span style="color:#75715e"># The expected FPL points for this player as predicted by the Fantasy Premier League&#39;s own algorithm    </span>
+</span></span><span style="display:flex;"><span> <span style="color:#e6db74">&#39;expected_assists&#39;</span>,            <span style="color:#75715e"># The expected assists accrued by the player this gameweek</span>
+</span></span><span style="display:flex;"><span> <span style="color:#e6db74">&#39;expected_goal_involvements&#39;</span>,  <span style="color:#75715e"># The expected goal involvements for the player this gameweek</span>
+</span></span><span style="display:flex;"><span> <span style="color:#e6db74">&#39;expected_goals&#39;</span>,              <span style="color:#75715e"># The expected goals conceded accrued by the player this gameweek</span>
+</span></span><span style="display:flex;"><span> <span style="color:#e6db74">&#39;expected_goals_conceded&#39;</span>,     <span style="color:#75715e"># The expected goals conceded accrued by the player&#39;s team this gameweek</span>
+</span></span><span style="display:flex;"><span> <span style="color:#e6db74">&#39;starts&#39;</span>]                      <span style="color:#75715e"># The number of starts by this player this gameweek</span>
+</span></span></code></pre></div><p>This might already look like a hefty list, but we want to start off broad and give our model more than one gameweek&rsquo;s worth of data, as that makes it impossible to tell how any player is doing in terms of <strong>recent form</strong>.</p>
+<p>We&rsquo;ll do this by:</p>
+<ol>
+<li>Taking a subset of the above list, and including the previous gameweek&rsquo;s raw stats without transforming them.</li>
+<li>Using that same subset of columns to calculate more features, which might give our model a sense of how players or their teams are performing over time.</li>
+</ol>
+<h3 id="deciding-which-columns-we"><em>Deciding which columns we&rsquo;ll transform into features</em></h3>
+<p>Let&rsquo;s start by splitting our starting line-up of stats into two lists:</p>
+<p>The first is called <code>STANDARD_FEATURES</code> and has all of the columns we want to <strong>drop</strong> or <strong>ignore</strong> during training, as either I don&rsquo;t think they have predictive value, or they run the risk of data leakage.</p>
+<p>The second list is called <code>LAST_N_FEATURES</code> and represents all of the raw features we&rsquo;ll be transforming into our training data:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#75715e"># Features we won&#39;t include</span>
+</span></span><span style="display:flex;"><span>STANDARD_FEATURES <span style="color:#f92672">=</span> [<span style="color:#e6db74">&#39;name&#39;</span>, <span style="color:#e6db74">&#39;position&#39;</span>, <span style="color:#e6db74">&#39;team&#39;</span>, <span style="color:#e6db74">&#39;opponent_team&#39;</span>, 
+</span></span><span style="display:flex;"><span>                    <span style="color:#e6db74">&#39;round&#39;</span>, <span style="color:#e6db74">&#39;total_points&#39;</span>, <span style="color:#e6db74">&#39;season&#39;</span>, <span style="color:#e6db74">&#39;xP&#39;</span>]
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Features we want to transform into our eventual training data</span>
+</span></span><span style="display:flex;"><span>LAST_N_FEATURES <span style="color:#f92672">=</span> [<span style="color:#e6db74">&#39;assists&#39;</span>, <span style="color:#e6db74">&#39;bonus&#39;</span>, <span style="color:#e6db74">&#39;bps&#39;</span>, <span style="color:#e6db74">&#39;clean_sheets&#39;</span>, <span style="color:#e6db74">&#39;creativity&#39;</span>, 
+</span></span><span style="display:flex;"><span>                  <span style="color:#e6db74">&#39;expected_assists&#39;</span>, <span style="color:#e6db74">&#39;expected_goal_involvements&#39;</span>, <span style="color:#e6db74">&#39;expected_goals&#39;</span>, 
+</span></span><span style="display:flex;"><span>                  <span style="color:#e6db74">&#39;expected_goals_conceded&#39;</span>, <span style="color:#e6db74">&#39;goals_conceded&#39;</span>, <span style="color:#e6db74">&#39;goals_scored&#39;</span>, 
+</span></span><span style="display:flex;"><span>                  <span style="color:#e6db74">&#39;influence&#39;</span>, <span style="color:#e6db74">&#39;minutes&#39;</span>, <span style="color:#e6db74">&#39;own_goals&#39;</span>, <span style="color:#e6db74">&#39;penalties_missed&#39;</span>, 
+</span></span><span style="display:flex;"><span>                  <span style="color:#e6db74">&#39;penalties_saved&#39;</span>, <span style="color:#e6db74">&#39;red_cards&#39;</span>, <span style="color:#e6db74">&#39;saves&#39;</span>, <span style="color:#e6db74">&#39;selected&#39;</span>, <span style="color:#e6db74">&#39;threat&#39;</span>, 
+</span></span><span style="display:flex;"><span>                  <span style="color:#e6db74">&#39;total_points&#39;</span>, <span style="color:#e6db74">&#39;transfers_balance&#39;</span>, <span style="color:#e6db74">&#39;transfers_in&#39;</span>, <span style="color:#e6db74">&#39;transfers_out&#39;</span>, 
+</span></span><span style="display:flex;"><span>                  <span style="color:#e6db74">&#39;value&#39;</span>, <span style="color:#e6db74">&#39;yellow_cards&#39;</span>, <span style="color:#e6db74">&#39;xP&#39;</span>, <span style="color:#e6db74">&#39;total_points&#39;</span>]
+</span></span></code></pre></div><h3 id="deciding-on-how-we"><em>Deciding on how we&rsquo;ll transform the data</em></h3>
+<p>We now need to decide on an approach that gives us a reasonably broad set of features for our training data.</p>
+<p>We can start by looking at the types of feature that are available to us. All of the features I&rsquo;ve used fall into one of the four buckets below:</p>
+<p> </p>
+<ol>
+<li><em><strong>RAW FEATURES</strong></em>: where the data is taken directly from the raw gameweek-level data, e.g. <em>&ldquo;the number of goals scored that gameweek.&rdquo;</em></li>
+</ol>
+<p><img src="raw_features.png" alt="Raw features">
+ </p>
+<p> </p>
+<ol start="2">
+<li><em><strong>MOVING AVERAGES</strong></em>: where we take a moving average from a consistent time window e.g. <em>&ldquo;the average number of goals from the past 3 gameweeks.&rdquo;</em></li>
+</ol>
+<p><img src="ma.png" alt="Moving averages">
+ </p>
+<p> </p>
+<ol start="3">
+<li><em><strong>LAGGED FEATURES</strong></em>: where we take a value from a fixed timeframe in the past, e.g. <em>&ldquo;the number of goals scored from 1 gameweek ago.&rdquo;</em></li>
+</ol>
+<p><img src="lagged_features.png" alt="Moving averages">
+ </p>
+<p> </p>
+<ol start="4">
+<li><em><strong>OTHER STATISTICAL FEATURES</strong></em>: for example <em>&ldquo;the standard deviation of goals in the past 3 gameweeks.&rdquo;</em></li>
+</ol>
+<h3 id="starting-assumptions-for-our-features"><em>Starting assumptions for our features</em></h3>
+<p>As you can probably already tell, there&rsquo;s a few assumptions I&rsquo;ve gone with that have shaped my approach:</p>
+<ul>
+<li>
+<p>We want lagged raw stats for the previous few gameweeks (especially the last gameweek), as there&rsquo;s probably something in there to do with <em><strong>momentum</strong></em> and <em><strong>form</strong></em>. If someone&rsquo;s played amazingly in the last few gameweeks, they&rsquo;re probably more likely to do so again.</p>
+</li>
+<li>
+<p>Knowing how much a player&rsquo;s performance varies, through the use of statistical measures such as <em><strong>mean</strong></em> and <em><strong>standard deviation</strong></em>, is also helpful to get an indication of consistency.</p>
+</li>
+<li>
+<p>Lastly, while individual performance is important, it&rsquo;s helpful context to know how their team has also performed, in terms of clean sheets, goals scored, and goals conceded. This also probably has a psychological impact on individual performance.</p>
+</li>
+</ul>
+<h3 id="how-do-we-know-how-useful-each-stat-actually-is-for-prediction"><em>How do we know how useful each stat actually is for prediction?</em></h3>
+<p>You might already have some inklings yourself about how useful a few of the FPL stats above are. For example:</p>
+<ul>
+<li>
+<p><em><strong>Transfers</strong></em> (both in or out) might be a great proxy for public &ldquo;hunches&rdquo; about players who are outperforming or underperforming their usual form, which isn&rsquo;t always be obvious from the data.</p>
+</li>
+<li>
+<p>On the flip side, <code>penalties_missed</code> isn&rsquo;t very indicative of relative form, as most players across most games wouldn&rsquo;t even dream of taking a penalty, meaning this stat would be a desperately boring 0.</p>
+</li>
+</ul>
+<p>Luckily, there&rsquo;s a scientific way to interpret exactly how much predictive power each feature has called <a href="https://explained.ai/rf-importance/">permutation importance</a>, which we&rsquo;ll come to in the next post after we&rsquo;ve trained our first model. <em>(Yes, that&rsquo;s probably the nerdiest hook you&rsquo;ve ever read, but stay with me..)</em></p>
+<p> </p>
+<p> </p>
+<hr>
+<p> </p>
+<h2 id="calculating-our-features-at-long-last">Calculating our features at long last</h2>
+<p>If you&rsquo;ve made it this far, you&rsquo;ve either got too much time on your hands, or you&rsquo;re not doing as well as you&rsquo;d hoped in your friends&rsquo; FPL league and you&rsquo;re trying to salvage what you can of the season to save face.</p>
+<p>Either way, I&rsquo;m grateful enough to let you know that it&rsquo;s almost over.</p>
+<p>We can finally produce our training data using the below function, called <code>calculate_features</code>, which transforms our chosen columns into our broader set of features I described above:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">calculate_features</span>(all_data):
+</span></span><span style="display:flex;"><span>    number_of_lags <span style="color:#f92672">=</span> <span style="color:#ae81ff">3</span>  <span style="color:#75715e"># Number of weeks for lag features</span>
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Aggregate team-level metrics</span>
+</span></span><span style="display:flex;"><span>    team_performance <span style="color:#f92672">=</span> all_data<span style="color:#f92672">.</span>groupby([<span style="color:#e6db74">&#39;team&#39;</span>, <span style="color:#e6db74">&#39;season&#39;</span>, <span style="color:#e6db74">&#39;round&#39;</span>])<span style="color:#f92672">.</span>agg({
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#39;goals_scored&#39;</span>: <span style="color:#e6db74">&#39;sum&#39;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#39;goals_conceded&#39;</span>: <span style="color:#e6db74">&#39;sum&#39;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#39;clean_sheets&#39;</span>: <span style="color:#e6db74">&#39;sum&#39;</span>,
+</span></span><span style="display:flex;"><span>    })<span style="color:#f92672">.</span>reset_index()
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Rename the aggregated columns so they don&#39;t clash with the player-level features</span>
+</span></span><span style="display:flex;"><span>    team_performance <span style="color:#f92672">=</span> team_performance<span style="color:#f92672">.</span>rename(columns<span style="color:#f92672">=</span>{
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#39;goals_scored&#39;</span>: <span style="color:#e6db74">&#39;team_goals_scored&#39;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#39;goals_conceded&#39;</span>: <span style="color:#e6db74">&#39;team_goals_conceded&#39;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#39;clean_sheets&#39;</span>: <span style="color:#e6db74">&#39;team_clean_sheets&#39;</span>
+</span></span><span style="display:flex;"><span>    })
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Create lag features for team performance</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> feature <span style="color:#f92672">in</span> [<span style="color:#e6db74">&#39;team_goals_scored&#39;</span>, <span style="color:#e6db74">&#39;team_goals_conceded&#39;</span>, <span style="color:#e6db74">&#39;team_clean_sheets&#39;</span>]: 
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">for</span> lag <span style="color:#f92672">in</span> range(<span style="color:#ae81ff">1</span>, number_of_lags <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>):
+</span></span><span style="display:flex;"><span>            team_performance[<span style="color:#e6db74">f</span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">{</span>feature<span style="color:#e6db74">}</span><span style="color:#e6db74">_lag_</span><span style="color:#e6db74">{</span>lag<span style="color:#e6db74">}</span><span style="color:#e6db74">&#39;</span>] <span style="color:#f92672">=</span> team_performance<span style="color:#f92672">.</span>groupby([<span style="color:#e6db74">&#39;team&#39;</span>, <span style="color:#e6db74">&#39;season&#39;</span>])[feature]<span style="color:#f92672">.</span>shift(lag)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Merge team performance with main data</span>
+</span></span><span style="display:flex;"><span>    all_data <span style="color:#f92672">=</span> pd<span style="color:#f92672">.</span>merge(all_data, team_performance, on<span style="color:#f92672">=</span>[<span style="color:#e6db74">&#39;team&#39;</span>, <span style="color:#e6db74">&#39;season&#39;</span>, <span style="color:#e6db74">&#39;round&#39;</span>], how<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;left&#39;</span>)
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    logger<span style="color:#f92672">.</span>info(list(team_performance<span style="color:#f92672">.</span>columns))
+</span></span><span style="display:flex;"><span>    logger<span style="color:#f92672">.</span>info(list(all_data<span style="color:#f92672">.</span>columns))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Calculate moving averages and lag features for individual players</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> feature <span style="color:#f92672">in</span> LAST_N_FEATURES:
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># Create lag features for the last 3 weeks</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">for</span> lag <span style="color:#f92672">in</span> range(<span style="color:#ae81ff">1</span>, number_of_lags <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>):
+</span></span><span style="display:flex;"><span>            all_data[<span style="color:#e6db74">f</span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">{</span>feature<span style="color:#e6db74">}</span><span style="color:#e6db74">_lag_</span><span style="color:#e6db74">{</span>lag<span style="color:#e6db74">}</span><span style="color:#e6db74">&#39;</span>] <span style="color:#f92672">=</span> all_data<span style="color:#f92672">.</span>groupby([<span style="color:#e6db74">&#39;name&#39;</span>, <span style="color:#e6db74">&#39;season&#39;</span>])[feature]<span style="color:#f92672">.</span>shift(lag)
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># Calculate mean and std dev of the last 3 weeks, lagged by 1 week</span>
+</span></span><span style="display:flex;"><span>        all_data[<span style="color:#e6db74">f</span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">{</span>feature<span style="color:#e6db74">}</span><span style="color:#e6db74">_mean_last_3_lag&#39;</span>] <span style="color:#f92672">=</span> all_data[[<span style="color:#e6db74">f</span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">{</span>feature<span style="color:#e6db74">}</span><span style="color:#e6db74">_lag_</span><span style="color:#e6db74">{</span>lag<span style="color:#e6db74">}</span><span style="color:#e6db74">&#39;</span> <span style="color:#66d9ef">for</span> lag <span style="color:#f92672">in</span> range(<span style="color:#ae81ff">1</span>, number_of_lags <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>)]]<span style="color:#f92672">.</span>mean(axis<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>)<span style="color:#f92672">.</span>shift(<span style="color:#ae81ff">1</span>)
+</span></span><span style="display:flex;"><span>        all_data[<span style="color:#e6db74">f</span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">{</span>feature<span style="color:#e6db74">}</span><span style="color:#e6db74">_std_last_3_lag&#39;</span>] <span style="color:#f92672">=</span> all_data[[<span style="color:#e6db74">f</span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">{</span>feature<span style="color:#e6db74">}</span><span style="color:#e6db74">_lag_</span><span style="color:#e6db74">{</span>lag<span style="color:#e6db74">}</span><span style="color:#e6db74">&#39;</span> <span style="color:#66d9ef">for</span> lag <span style="color:#f92672">in</span> range(<span style="color:#ae81ff">1</span>, number_of_lags <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>)]]<span style="color:#f92672">.</span>std(axis<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>)<span style="color:#f92672">.</span>shift(<span style="color:#ae81ff">1</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Select the relevant columns</span>
+</span></span><span style="display:flex;"><span>    lag_feature_columns <span style="color:#f92672">=</span> [<span style="color:#e6db74">f</span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">{</span>feature<span style="color:#e6db74">}</span><span style="color:#e6db74">_lag_</span><span style="color:#e6db74">{</span>lag<span style="color:#e6db74">}</span><span style="color:#e6db74">&#39;</span> <span style="color:#66d9ef">for</span> feature <span style="color:#f92672">in</span> LAST_N_FEATURES <span style="color:#66d9ef">for</span> lag <span style="color:#f92672">in</span> range(<span style="color:#ae81ff">1</span>, number_of_lags <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>)]
+</span></span><span style="display:flex;"><span>    lag_stat_columns <span style="color:#f92672">=</span> [<span style="color:#e6db74">f</span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">{</span>feature<span style="color:#e6db74">}</span><span style="color:#e6db74">_mean_last_3_lag&#39;</span> <span style="color:#66d9ef">for</span> feature <span style="color:#f92672">in</span> LAST_N_FEATURES] <span style="color:#f92672">+</span> [<span style="color:#e6db74">f</span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">{</span>feature<span style="color:#e6db74">}</span><span style="color:#e6db74">_std_last_3_lag&#39;</span> <span style="color:#66d9ef">for</span> feature <span style="color:#f92672">in</span> LAST_N_FEATURES]
+</span></span><span style="display:flex;"><span>    team_lag_feature_columns <span style="color:#f92672">=</span> [<span style="color:#e6db74">f</span><span style="color:#e6db74">&#39;team_</span><span style="color:#e6db74">{</span>feature<span style="color:#e6db74">}</span><span style="color:#e6db74">_lag_</span><span style="color:#e6db74">{</span>lag<span style="color:#e6db74">}</span><span style="color:#e6db74">&#39;</span> <span style="color:#66d9ef">for</span> feature <span style="color:#f92672">in</span> [<span style="color:#e6db74">&#39;goals_scored&#39;</span>, <span style="color:#e6db74">&#39;goals_conceded&#39;</span>, <span style="color:#e6db74">&#39;clean_sheets&#39;</span>] <span style="color:#66d9ef">for</span> lag <span style="color:#f92672">in</span> range(<span style="color:#ae81ff">1</span>, number_of_lags <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>)]  
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> all_data[STANDARD_FEATURES <span style="color:#f92672">+</span> lag_feature_columns <span style="color:#f92672">+</span> lag_stat_columns <span style="color:#f92672">+</span> team_lag_feature_columns]
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>training_data <span style="color:#f92672">=</span> calculate_features(all_data)<span style="color:#f92672">.</span>reset_index(drop<span style="color:#f92672">=</span><span style="color:#66d9ef">True</span>)
+</span></span><span style="display:flex;"><span>training_data<span style="color:#f92672">.</span>to_csv(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;training_data.csv&#34;</span>)
+</span></span></code></pre></div><p> </p>
+<p>Running this function gives us an updated dataframe (table) of training data, exported to a .csv, which looks something like this:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-markdown" data-lang="markdown"><span style="display:flex;"><span>                           name position         team  opponent_team round total_points  ... team_goals_conceded_lag_1  team_goals_conceded_lag_2 team_goals_conceded_lag_3 team_clean_sheets_lag_1 team_clean_sheets_lag_2 team_clean_sheets_lag_3
+</span></span><span style="display:flex;"><span>0           Aaron_Cresswell_376      NaN          NaN             11     1            0  ...                      None                       None                      None                    None                    None                    None
+</span></span><span style="display:flex;"><span>1              Aaron_Lennon_430      NaN          NaN             16     1            1  ...                      None                       None                      None                    None                    None                    None
+</span></span><span style="display:flex;"><span>2                Aaron_Mooy_516      NaN          NaN             18     1            0  ...                      None                       None                      None                    None                    None                    None
+</span></span><span style="display:flex;"><span>3            Aaron_Ramsdale_494      NaN          NaN             15     1            2  ...                      None                       None                      None                    None                    None                    None
+</span></span><span style="display:flex;"><span>4         Aaron_Wan-Bissaka_122      NaN          NaN              6     1            8  ...                      None                       None                      None                    None                    None                    None
+</span></span><span style="display:flex;"><span>...                         ...      ...          ...            ...   ...          ...  ...                       ...                        ...                       ...                     ...                     ...                     ...
+</span></span><span style="display:flex;"><span>92868              Oliver Skipp      MID        Spurs             11    38            2  ...                        33                         22                         0                       0                       0                      11
+</span></span><span style="display:flex;"><span>92869            Ryan Sessegnon      DEF        Spurs             11    38            0  ...                        33                         22                         0                       0                       0                      11
+</span></span><span style="display:flex;"><span>92870              Ashley Young      DEF  Aston Villa              5    38            0  ...                        11                         11                        11                       2                       2                       0
+</span></span><span style="display:flex;"><span>92871  Jeremy Sarmiento Morante      MID     Brighton              2    38            0  ...                        22                         44                        55                       0                      10                       0
+</span></span><span style="display:flex;"><span>92872            Philip Billing      MID  Bournemouth              8    38            2  ...                        11                         22                        33                       0                       0                       0     
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>[92873 rows x 157 columns]
+</span></span></code></pre></div><p>Using the logic and approach we outlined above, we&rsquo;ve almost <em><strong>quadrupled</strong></em> the number of columns to a comprehensive set of 157 features, and we now have some training data to train our model on!</p>
+<p><em>(You may have spotted there&rsquo;s a few <code>NaN</code> (meaning &ldquo;not a number&rdquo;) or <code>None</code> values above, but we&rsquo;ll come onto cleaning the data in the next post.)</em></p>
+<h3 id="the-rest-of-the-season"><em>The rest of the season..</em></h3>
+<p>Next time, you&rsquo;ll finally train ✨<em><strong>my first machine learning model</strong></em>™️✨.
+We&rsquo;ll tweak our training data based on early results, before starting to think about <em><strong>hyperparameters</strong></em> and how they can affect the outcome.</p>
+<p>ₕₒw ₑₓcᵢₜᵢₙg!</p>
+<p> </p>
+
+</article>
+
+            </div>
+        </main>
+    </body></html>

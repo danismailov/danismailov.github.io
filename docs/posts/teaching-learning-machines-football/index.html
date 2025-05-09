@@ -1,50 +1,281 @@
-<!doctype html><html lang=en-gb><head><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1"><link rel=stylesheet href=/css/styles.css><meta name=description content="How I tried to satisfy my FPL obsession by trying to gain an unfair advantage through AI: Part 1 – The Setup
+<!DOCTYPE html>
+<html lang="en-gb"><head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="/css/styles.css">
+   <meta name="description" content="How I tried to satisfy my FPL obsession by trying to gain an unfair advantage through AI: Part 1 – The Setup
 See the accompanying Github repo here.
 
 Gameweek 16.
 I’m midway through a season-long Fantasy Premier League (FPL) ban, which, in theory, should have won me back a few hours per week to plan a wedding.
-A wedding that, despite my persistent disorganisation, I’m hopeful my partner will still allow me to attend."><title>Teaching learning machines football pt.1
-</title><link rel="shortcut icon" type=image/x-icon href=/></head><body a=auto><main class=page-content aria-label=Content><div class=w><a href=/>Данияр ⇄ Dani</a>
-<span style=float:right><time datetime="2024-01-25 20:47:43 +0000 UTC">2024-01-25</time></span></br></br></br><article><h1>Teaching learning machines football pt.1</h1><h3 id=how-i-tried-to-satisfy-my-fpl-obsession-by-trying-to-gain-an-unfair-advantage-through-ai-part-1--the-setup><em>How I tried to satisfy my FPL obsession by trying to gain an unfair advantage through AI: Part 1 – The Setup</em></h3><p><em>See the accompanying Github repo <a href=https://github.com/danismailov/fpl-with-fml>here</a>.</em></p><p><img src=football.png alt=Football></p><p>Gameweek 16.</p><p>I’m midway through a season-long Fantasy Premier League (FPL) ban, which, in theory, should have won me back a few hours per week to plan a wedding.</p><p>A wedding that, despite my persistent disorganisation, I’m hopeful my partner will still allow me to attend.</p><p>I get an idea. A simple idea, which every single person who straddles the worlds of football and data, has had –</p><p><em>“Why don’t I just automate my FPL using AI?”</em></p><p> </p><hr><p> </p><p>A few weeks later, here we are.</p><ul><li><p>No FPL Skynet overlord, who can predict the number of yellow cards next week more accurately than the <a href=https://www.joe.co.uk/sport/xhaka-investigators-booking-alleged-criminal-conspiracy-352204>Albanian mafia</a>.</p></li><li><p>No basic automaton to take the reins, while I focus on floral arrangements and paper thickness for wedding invites.</p></li><li><p>Many hours sunk; many more decisions yet to be made about the wedding.</p></li></ul><p> </p><p>What I did emerge with, however, are a few misguided ramblings about my first few steps into ML through the medium of football, which I&rsquo;ll be sharing as a series of posts on this blog.</p><p>If you’re curious about football and data, I hope this saves you some time in ruining the randomness of “the beautiful game”.</p><p> </p><p><em>(If you’re just here to see results, you can see them <a href=https://github.com/danismailov/fpl-with-fml>here</a>.)</em></p><p> </p><hr><p> </p><h1 id=the-aim>The aim</h1><p>To actually have this fully running an FPL team, we&rsquo;ll have to optimise for the more complex game mechanics, like points per £ spent (as there&rsquo;s a limit on budget), or take account of performances that are untypical of that player from previous seasons.</p><p>Before getting into that, however, we can start with the simplest functionality: how can you predict how many points each player will get, in the next gameweek?</p><p>If I knew how many goals are scored; red and yellow cards are picked up; or anything else from this gameweek, it’s very easy to guess (or calculate) the points.</p><p>What we need to do here, however, is figure out how we can use data from <em>last week or the weeks before</em>, to predict what each player might score in FPL points in <em>the week ahead</em>.</p><p>So specifically, we need to predict FPL points <em>ahead of time</em>, and the model can&rsquo;t have be trained on data that it wouldn&rsquo;t be able to know (such as current gameweek data), when making predictions.</p><p>To get an idea of how good our predictions are, the Fantasy Premier League also has a value called <em>xP</em> (expected points) per player per gameweek, which gives us a perfect benchmark to try to beat.</p><p> </p><hr><p> </p><h1 id=the-data>The data</h1><p>The first thing we need is historical data. Luckily, getting well-structured data for the Premier League, is fairly easy.</p><p>The FPL website has an API that provides a huge amount of football data <a href=https://fantasy.premierleague.com/api/bootstrap-static/>via JSON</a>.</p><p>Parsing this JSON into a simpler tabular format was going to take a novice like me some wrangling, so at first, I resigned myself to spending Christmas unnesting JSON objects, like a sad elf.</p><p>Luckily for me, for every miserable elf there’s also a cheery Santa. And, in my case, Santa came in form of Vaastav, who, as it turns out, had already pre-processed all of the data in a well-maintained GitHub repository <a href=https://github.com/vaastav/Fantasy-Premier-League/tree/master>found here</a>.</p><p>This repo processes the API into a csv on a per-team, per-player and per-gameweek level, with each gameweek csv having over 60 columns of data per each player per gameweek, like this:</p><p> </p><table><thead><tr><th style=text-align:left>name</th><th style=text-align:left>xP</th><th style=text-align:left>total_points</th><th style=text-align:left>goals_scored</th><th style=text-align:left><em>etc.</em></th></tr></thead><tbody><tr><td style=text-align:left>Femi Seriki</td><td style=text-align:left>0.5</td><td style=text-align:left>0</td><td style=text-align:left>0</td><td style=text-align:left>&mldr;</td></tr><tr><td style=text-align:left>Jack Hinshelwood</td><td style=text-align:left>1.5</td><td style=text-align:left>0</td><td style=text-align:left>0</td><td style=text-align:left>&mldr;</td></tr><tr><td style=text-align:left>Jadon Sancho</td><td style=text-align:left>3.0</td><td style=text-align:left>1</td><td style=text-align:left>0</td><td style=text-align:left>&mldr;</td></tr><tr><td style=text-align:left>Rhys Norrington-Davies</td><td style=text-align:left>0.1</td><td style=text-align:left>0</td><td style=text-align:left>0</td><td style=text-align:left>&mldr;</td></tr><tr><td style=text-align:left>Vitaly Janelt</td><td style=text-align:left>2.1</td><td style=text-align:left>2</td><td style=text-align:left>0</td><td style=text-align:left>&mldr;</td></tr><tr><td style=text-align:left>&mldr;</td><td style=text-align:left>&mldr;</td><td style=text-align:left>&mldr;</td><td style=text-align:left>&mldr;</td><td style=text-align:left>&mldr;</td></tr></tbody></table><p> </p><p>Therefore, it&rsquo;s fairly straightforward to get pre-processed gameweek-level data, from which to calculate features, by merging each gameweek per season, into one big table, like so:</p><p> </p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=display:flex><span><span style=color:#f92672>import</span> pandas <span style=color:#66d9ef>as</span> pd
-</span></span><span style=display:flex><span><span style=color:#f92672>import</span> requests
-</span></span><span style=display:flex><span><span style=color:#f92672>import</span> logging
-</span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span><span style=color:#75715e># Set up logging</span>
-</span></span><span style=display:flex><span>logging<span style=color:#f92672>.</span>basicConfig(level<span style=color:#f92672>=</span>logging<span style=color:#f92672>.</span>INFO)
-</span></span><span style=display:flex><span>logger <span style=color:#f92672>=</span> logging<span style=color:#f92672>.</span>getLogger()
-</span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span><span style=color:#75715e># Years for which we want to get the gameweeks</span>
-</span></span><span style=display:flex><span>TRAINING_YEARS <span style=color:#f92672>=</span> [<span style=color:#e6db74>&#34;2019-20&#34;</span>,<span style=color:#e6db74>&#34;2020-21&#34;</span>,<span style=color:#e6db74>&#34;2021-22&#34;</span>,<span style=color:#e6db74>&#34;2022-23&#34;</span>]
-</span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span><span style=color:#75715e># Getting the teams per season</span>
-</span></span><span style=display:flex><span><span style=color:#66d9ef>def</span> <span style=color:#a6e22e>get_teams</span>(year):
-</span></span><span style=display:flex><span>    <span style=color:#66d9ef>try</span>:
-</span></span><span style=display:flex><span>        teams_url <span style=color:#f92672>=</span> <span style=color:#e6db74>f</span><span style=color:#e6db74>&#34;https://raw.githubusercontent.com/vaastav/Fantasy-Premier-League/master/data/</span><span style=color:#e6db74>{</span>year<span style=color:#e6db74>}</span><span style=color:#e6db74>/teams.csv&#34;</span>
-</span></span><span style=display:flex><span>        teams <span style=color:#f92672>=</span> pd<span style=color:#f92672>.</span>read_csv(teams_url, encoding<span style=color:#f92672>=</span><span style=color:#e6db74>&#34;utf-8&#34;</span>)[[<span style=color:#e6db74>&#34;id&#34;</span>, <span style=color:#e6db74>&#34;name&#34;</span>]]
-</span></span><span style=display:flex><span>        teams<span style=color:#f92672>.</span>columns <span style=color:#f92672>=</span> [<span style=color:#e6db74>&#34;opponent_team&#34;</span>, <span style=color:#e6db74>&#34;opponent&#34;</span>]
-</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> teams
-</span></span><span style=display:flex><span>    <span style=color:#66d9ef>except</span> <span style=color:#a6e22e>Exception</span> <span style=color:#66d9ef>as</span> e:
-</span></span><span style=display:flex><span>        logger<span style=color:#f92672>.</span>error(<span style=color:#e6db74>f</span><span style=color:#e6db74>&#34;Error fetching teams for </span><span style=color:#e6db74>{</span>year<span style=color:#e6db74>}</span><span style=color:#e6db74>: </span><span style=color:#e6db74>{</span>e<span style=color:#e6db74>}</span><span style=color:#e6db74>&#34;</span>)
-</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> pd<span style=color:#f92672>.</span>DataFrame()
-</span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span><span style=color:#75715e># Getting gameweeks for the years specified in TRAINING_YEARS</span>
-</span></span><span style=display:flex><span><span style=color:#66d9ef>def</span> <span style=color:#a6e22e>get_training_data</span>(TRAINING_YEARS):
-</span></span><span style=display:flex><span>    list_of_gws <span style=color:#f92672>=</span> []
-</span></span><span style=display:flex><span>    <span style=color:#66d9ef>for</span> year <span style=color:#f92672>in</span> TRAINING_YEARS:
-</span></span><span style=display:flex><span>        <span style=color:#66d9ef>for</span> gameweek <span style=color:#f92672>in</span> range(<span style=color:#ae81ff>1</span>, <span style=color:#ae81ff>39</span>):
-</span></span><span style=display:flex><span>            logger<span style=color:#f92672>.</span>info(<span style=color:#e6db74>f</span><span style=color:#e6db74>&#34;Getting data for </span><span style=color:#e6db74>{</span>year<span style=color:#e6db74>}</span><span style=color:#e6db74> gameweek </span><span style=color:#e6db74>{</span>gameweek<span style=color:#e6db74>}</span><span style=color:#e6db74>&#34;</span>)
-</span></span><span style=display:flex><span>            <span style=color:#66d9ef>try</span>:
-</span></span><span style=display:flex><span>                gw_data <span style=color:#f92672>=</span> pd<span style=color:#f92672>.</span>read_csv(<span style=color:#e6db74>f</span><span style=color:#e6db74>&#34;https://raw.githubusercontent.com/vaastav/Fantasy-Premier-League/master/data/</span><span style=color:#e6db74>{</span>year<span style=color:#e6db74>}</span><span style=color:#e6db74>/gws/gw</span><span style=color:#e6db74>{</span>gameweek<span style=color:#e6db74>}</span><span style=color:#e6db74>.csv&#34;</span>, encoding<span style=color:#f92672>=</span><span style=color:#e6db74>&#34;utf-8&#34;</span>)
-</span></span><span style=display:flex><span>                
-</span></span><span style=display:flex><span>                <span style=color:#75715e># add opponent team</span>
-</span></span><span style=display:flex><span>                teams <span style=color:#f92672>=</span> get_teams(year)
-</span></span><span style=display:flex><span>                gw_data <span style=color:#f92672>=</span> pd<span style=color:#f92672>.</span>merge(gw_data, teams, on<span style=color:#f92672>=</span><span style=color:#e6db74>&#34;opponent_team&#34;</span>, how<span style=color:#f92672>=</span><span style=color:#e6db74>&#34;left&#34;</span>)
-</span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span>                <span style=color:#75715e># add season</span>
-</span></span><span style=display:flex><span>                gw_data[<span style=color:#e6db74>&#34;season&#34;</span>] <span style=color:#f92672>=</span> year
-</span></span><span style=display:flex><span>                list_of_gws<span style=color:#f92672>.</span>append(gw_data)
-</span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span>            <span style=color:#66d9ef>except</span> <span style=color:#a6e22e>Exception</span> <span style=color:#66d9ef>as</span> e:
-</span></span><span style=display:flex><span>                logger<span style=color:#f92672>.</span>error(<span style=color:#e6db74>f</span><span style=color:#e6db74>&#34;Error fetching data for </span><span style=color:#e6db74>{</span>year<span style=color:#e6db74>}</span><span style=color:#e6db74> gameweek </span><span style=color:#e6db74>{</span>gameweek<span style=color:#e6db74>}</span><span style=color:#e6db74>: </span><span style=color:#e6db74>{</span>e<span style=color:#e6db74>}</span><span style=color:#e6db74>&#34;</span>)
-</span></span><span style=display:flex><span>    <span style=color:#66d9ef>return</span> pd<span style=color:#f92672>.</span>concat(list_of_gws)
-</span></span></code></pre></div><p> </p><p>The <code>get_training_data</code> function outputs a dataframe from which we can start calculating features (the stats we&rsquo;ll be training our model on), which looks the same as the per-gameweek level data, except with season and gameweek specified, like so:</p><p> </p><table><thead><tr><th style=text-align:left>name</th><th style=text-align:left>total_points</th><th style=text-align:left>season</th><th style=text-align:left>gameweek</th><th style=text-align:left><em>etc.</em></th></tr></thead><tbody><tr><td style=text-align:left>Femi Seriki</td><td style=text-align:left>0</td><td style=text-align:left>2022-23</td><td style=text-align:left>1</td><td style=text-align:left>&mldr;</td></tr><tr><td style=text-align:left>Jack Hinshelwood</td><td style=text-align:left>0</td><td style=text-align:left>2022-23</td><td style=text-align:left>1</td><td style=text-align:left>&mldr;</td></tr><tr><td style=text-align:left>Jadon Sancho</td><td style=text-align:left>1</td><td style=text-align:left>2022-23</td><td style=text-align:left>1</td><td style=text-align:left>&mldr;</td></tr><tr><td style=text-align:left>Rhys Norrington-Davies</td><td style=text-align:left>0</td><td style=text-align:left>2022-23</td><td style=text-align:left>1</td><td style=text-align:left>&mldr;</td></tr><tr><td style=text-align:left>Vitaly Janelt</td><td style=text-align:left>2</td><td style=text-align:left>2022-23</td><td style=text-align:left>1</td><td style=text-align:left>&mldr;</td></tr><tr><td style=text-align:left>&mldr;</td><td style=text-align:left>&mldr;</td><td style=text-align:left>&mldr;</td><td style=text-align:left>&mldr;</td><td style=text-align:left>&mldr;</td></tr></tbody></table><p> </p><p>We&rsquo;re also adding context of who the opposing team is, as this will later be helpful for calculating features that relate to the opposing team&rsquo;s performance.</p><p> </p><hr><p> </p><h1 id=the-tooling>The tooling</h1><p>While I can get by in Python, I’d come to my first ML project pretty damn fresh. I hadn’t ever got round to tinkering with sklearn; I thought that a feature is any film shown at the cinema; and I’d have bet money that a hyperparameter is a gadget Anikin would want to buy in the back-alleys of Tatooine.</p><p>Therefore, to actually figure out how to train a model, I’d need a mentor, I’d need an idiot-proof ML library, and I’d need compute.</p><h3 id=the-mentor>The mentor</h3><p>Luckily for me, I already knew of a wise companion called <a href=https://chat.openai.com/>ChatGPT</a>: my very own machine learning Shifu, who explains concepts simply and demonstrates them through code.</p><p>Whether quickly plotting graphs in matplotlib or seaborn; providing in-depth explanations of different metrics to let you know how well a model is performing; or refactoring code to be more performant, I can’t emphasise how much of a help ChatGPT has been, and it meant I’d trained my first model in a matter of days instead of a matter of months.</p><p><em>[I’ll eventually follow up with a post on how to use ChatGPT effectively as a coding buddy and mentor, and I’ve included a few example prompts I used in the next post.]</em></p><h3 id=the-idiot-proof-machine-learning-library>The idiot-proof machine learning library</h3><p>Around the time I started on this project, I also happened to stumble across a NeurIPS roundup article with reference to <a href=https://autogluon.github.io/neurips-autogluon-workshop/>AutoGluon</a> - a state of the art AutoML library. It promised to do all of the heavy lifting for me, and quickly won me over with a super easy “<a href=https://auto.gluon.ai/stable/tutorials/tabular/tabular-quick-start.html>get started</a>“ guide.</p><p>Fast forward a few weeks, and I’m still hugely impressed at how easy it is to run your first ML project using AutoGluon. With some data and some basic Python, anyone can run state-of-the-art ML models with great results.</p><h3 id=the-compute>The compute</h3><p>Lastly, as I was browsing through a few other people’s attempts at the same challenge on GitHub for inspiration, I found a reference to <a href=https://colab.google/>Google Colab</a>, which offers a free instance that has superior disk space to my work laptop, 12gb memory, and a GPU. That meant that while all of the pre-processing was done on my laptop, I could leave the model training in the Colab notebook in the background, without affecting my work.</p><p> </p><hr><p> </p><h1 id=the-pipeline-so-far>The pipeline so far</h1><p>Put all the above together, and we have the setup needed to train our very own football-learning machine monster.</p><p>Here&rsquo;s the rough pipeline of our setup so far:</p><p> </p><p><img src=flow.png alt="Flow diagram"></p><p> </p><p>In the next post, I’ll cover <em>feature selection</em>: how we can choose stats that give the machine learning model the best chance of predicting points accurately.</p></article></div></main></body></html>
+A wedding that, despite my persistent disorganisation, I’m hopeful my partner will still allow me to attend.">  
+
+  <title>
+    
+      Teaching learning machines football pt.1
+    
+  </title>
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/" />
+  
+  
+</head>
+<body a="auto">
+        <main class="page-content" aria-label="Content">
+            <div class="w">
+<a href="/">Данияр ⇄ Dani</a>
+
+<span style="float:right;">
+    <time datetime="2024-01-25 20:47:43 &#43;0000 UTC">
+        2024-01-25
+    </time>
+</span>
+</br>
+</br>
+</br>
+<article>
+
+    <h1>Teaching learning machines football pt.1</h1>
+    
+
+    <h3 id="how-i-tried-to-satisfy-my-fpl-obsession-by-trying-to-gain-an-unfair-advantage-through-ai-part-1--the-setup"><em>How I tried to satisfy my FPL obsession by trying to gain an unfair advantage through AI: Part 1 – The Setup</em></h3>
+<p><em>See the accompanying Github repo <a href="https://github.com/danismailov/fpl-with-fml">here</a>.</em></p>
+<p><img src="football.png" alt="Football"></p>
+<p>Gameweek 16.</p>
+<p>I’m midway through a season-long Fantasy Premier League (FPL) ban, which, in theory, should have won me back a few hours per week to plan a wedding.</p>
+<p>A wedding that, despite my persistent disorganisation, I’m hopeful my partner will still allow me to attend.</p>
+<p>I get an idea. A simple idea, which every single person who straddles the worlds of football and data, has had –</p>
+<p><em>“Why don’t I just automate my FPL using AI?”</em></p>
+<p> </p>
+<hr>
+<p> </p>
+<p>A few weeks later, here we are.</p>
+<ul>
+<li>
+<p>No FPL Skynet overlord, who can predict the number of yellow cards next week more accurately than the <a href="https://www.joe.co.uk/sport/xhaka-investigators-booking-alleged-criminal-conspiracy-352204">Albanian mafia</a>.</p>
+</li>
+<li>
+<p>No basic automaton to take the reins, while I focus on floral arrangements and paper thickness for wedding invites.</p>
+</li>
+<li>
+<p>Many hours sunk; many more decisions yet to be made about the wedding.</p>
+</li>
+</ul>
+<p> </p>
+<p>What I did emerge with, however, are a few misguided ramblings about my first few steps into ML through the medium of football, which I&rsquo;ll be sharing as a series of posts on this blog.</p>
+<p>If you’re curious about football and data, I hope this saves you some time in ruining the randomness of “the beautiful game”.</p>
+<p> </p>
+<p><em>(If you’re just here to see results, you can see them <a href="https://github.com/danismailov/fpl-with-fml">here</a>.)</em></p>
+<p> </p>
+<hr>
+<p> </p>
+<h1 id="the-aim">The aim</h1>
+<p>To actually have this fully running an FPL team, we&rsquo;ll have to optimise for the more complex game mechanics, like points per £ spent (as there&rsquo;s a limit on budget), or take account of performances that are untypical of that player from previous seasons.</p>
+<p>Before getting into that, however, we can start with the simplest functionality: how can you predict how many points each player will get, in the next gameweek?</p>
+<p>If I knew how many goals are scored; red and yellow cards are picked up; or anything else from this gameweek, it’s very easy to guess (or calculate) the points.</p>
+<p>What we need to do here, however, is figure out how we can use data from <em>last week or the weeks before</em>, to predict what each player might score in FPL points in <em>the week ahead</em>.</p>
+<p>So specifically, we need to predict FPL points <em>ahead of time</em>, and the model can&rsquo;t have be trained on data that it wouldn&rsquo;t be able to know (such as current gameweek data), when making predictions.</p>
+<p>To get an idea of how good our predictions are, the Fantasy Premier League also has a value called <em>xP</em> (expected points) per player per gameweek, which gives us a perfect benchmark to try to beat.</p>
+<p> </p>
+<hr>
+<p> </p>
+<h1 id="the-data">The data</h1>
+<p>The first thing we need is historical data. Luckily, getting well-structured data for the Premier League, is fairly easy.</p>
+<p>The FPL website has an API that provides a huge amount of football data <a href="https://fantasy.premierleague.com/api/bootstrap-static/">via JSON</a>.</p>
+<p>Parsing this JSON into a simpler tabular format was going to take a novice like me some wrangling, so at first, I resigned myself to spending Christmas unnesting JSON objects, like a sad elf.</p>
+<p>Luckily for me, for every miserable elf there’s also a cheery Santa. And, in my case, Santa came in form of Vaastav, who, as it turns out, had already pre-processed all of the data in a well-maintained GitHub repository <a href="https://github.com/vaastav/Fantasy-Premier-League/tree/master">found here</a>.</p>
+<p>This repo processes the API into a csv on a per-team, per-player and per-gameweek level, with each gameweek csv having over 60 columns of data per each player per gameweek, like this:</p>
+<p> </p>
+<table>
+  <thead>
+      <tr>
+          <th style="text-align: left">name</th>
+          <th style="text-align: left">xP</th>
+          <th style="text-align: left">total_points</th>
+          <th style="text-align: left">goals_scored</th>
+          <th style="text-align: left"><em>etc.</em></th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td style="text-align: left">Femi Seriki</td>
+          <td style="text-align: left">0.5</td>
+          <td style="text-align: left">0</td>
+          <td style="text-align: left">0</td>
+          <td style="text-align: left">&hellip;</td>
+      </tr>
+      <tr>
+          <td style="text-align: left">Jack Hinshelwood</td>
+          <td style="text-align: left">1.5</td>
+          <td style="text-align: left">0</td>
+          <td style="text-align: left">0</td>
+          <td style="text-align: left">&hellip;</td>
+      </tr>
+      <tr>
+          <td style="text-align: left">Jadon Sancho</td>
+          <td style="text-align: left">3.0</td>
+          <td style="text-align: left">1</td>
+          <td style="text-align: left">0</td>
+          <td style="text-align: left">&hellip;</td>
+      </tr>
+      <tr>
+          <td style="text-align: left">Rhys Norrington-Davies</td>
+          <td style="text-align: left">0.1</td>
+          <td style="text-align: left">0</td>
+          <td style="text-align: left">0</td>
+          <td style="text-align: left">&hellip;</td>
+      </tr>
+      <tr>
+          <td style="text-align: left">Vitaly Janelt</td>
+          <td style="text-align: left">2.1</td>
+          <td style="text-align: left">2</td>
+          <td style="text-align: left">0</td>
+          <td style="text-align: left">&hellip;</td>
+      </tr>
+      <tr>
+          <td style="text-align: left">&hellip;</td>
+          <td style="text-align: left">&hellip;</td>
+          <td style="text-align: left">&hellip;</td>
+          <td style="text-align: left">&hellip;</td>
+          <td style="text-align: left">&hellip;</td>
+      </tr>
+  </tbody>
+</table>
+<p> </p>
+<p>Therefore, it&rsquo;s fairly straightforward to get pre-processed gameweek-level data, from which to calculate features, by merging each gameweek per season, into one big table, like so:</p>
+<p> </p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">import</span> pandas <span style="color:#66d9ef">as</span> pd
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> requests
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> logging
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Set up logging</span>
+</span></span><span style="display:flex;"><span>logging<span style="color:#f92672">.</span>basicConfig(level<span style="color:#f92672">=</span>logging<span style="color:#f92672">.</span>INFO)
+</span></span><span style="display:flex;"><span>logger <span style="color:#f92672">=</span> logging<span style="color:#f92672">.</span>getLogger()
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Years for which we want to get the gameweeks</span>
+</span></span><span style="display:flex;"><span>TRAINING_YEARS <span style="color:#f92672">=</span> [<span style="color:#e6db74">&#34;2019-20&#34;</span>,<span style="color:#e6db74">&#34;2020-21&#34;</span>,<span style="color:#e6db74">&#34;2021-22&#34;</span>,<span style="color:#e6db74">&#34;2022-23&#34;</span>]
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Getting the teams per season</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">get_teams</span>(year):
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">try</span>:
+</span></span><span style="display:flex;"><span>        teams_url <span style="color:#f92672">=</span> <span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;https://raw.githubusercontent.com/vaastav/Fantasy-Premier-League/master/data/</span><span style="color:#e6db74">{</span>year<span style="color:#e6db74">}</span><span style="color:#e6db74">/teams.csv&#34;</span>
+</span></span><span style="display:flex;"><span>        teams <span style="color:#f92672">=</span> pd<span style="color:#f92672">.</span>read_csv(teams_url, encoding<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;utf-8&#34;</span>)[[<span style="color:#e6db74">&#34;id&#34;</span>, <span style="color:#e6db74">&#34;name&#34;</span>]]
+</span></span><span style="display:flex;"><span>        teams<span style="color:#f92672">.</span>columns <span style="color:#f92672">=</span> [<span style="color:#e6db74">&#34;opponent_team&#34;</span>, <span style="color:#e6db74">&#34;opponent&#34;</span>]
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> teams
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">except</span> <span style="color:#a6e22e">Exception</span> <span style="color:#66d9ef">as</span> e:
+</span></span><span style="display:flex;"><span>        logger<span style="color:#f92672">.</span>error(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;Error fetching teams for </span><span style="color:#e6db74">{</span>year<span style="color:#e6db74">}</span><span style="color:#e6db74">: </span><span style="color:#e6db74">{</span>e<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> pd<span style="color:#f92672">.</span>DataFrame()
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Getting gameweeks for the years specified in TRAINING_YEARS</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">get_training_data</span>(TRAINING_YEARS):
+</span></span><span style="display:flex;"><span>    list_of_gws <span style="color:#f92672">=</span> []
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> year <span style="color:#f92672">in</span> TRAINING_YEARS:
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">for</span> gameweek <span style="color:#f92672">in</span> range(<span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">39</span>):
+</span></span><span style="display:flex;"><span>            logger<span style="color:#f92672">.</span>info(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;Getting data for </span><span style="color:#e6db74">{</span>year<span style="color:#e6db74">}</span><span style="color:#e6db74"> gameweek </span><span style="color:#e6db74">{</span>gameweek<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>)
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">try</span>:
+</span></span><span style="display:flex;"><span>                gw_data <span style="color:#f92672">=</span> pd<span style="color:#f92672">.</span>read_csv(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;https://raw.githubusercontent.com/vaastav/Fantasy-Premier-League/master/data/</span><span style="color:#e6db74">{</span>year<span style="color:#e6db74">}</span><span style="color:#e6db74">/gws/gw</span><span style="color:#e6db74">{</span>gameweek<span style="color:#e6db74">}</span><span style="color:#e6db74">.csv&#34;</span>, encoding<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;utf-8&#34;</span>)
+</span></span><span style="display:flex;"><span>                
+</span></span><span style="display:flex;"><span>                <span style="color:#75715e"># add opponent team</span>
+</span></span><span style="display:flex;"><span>                teams <span style="color:#f92672">=</span> get_teams(year)
+</span></span><span style="display:flex;"><span>                gw_data <span style="color:#f92672">=</span> pd<span style="color:#f92672">.</span>merge(gw_data, teams, on<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;opponent_team&#34;</span>, how<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;left&#34;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>                <span style="color:#75715e"># add season</span>
+</span></span><span style="display:flex;"><span>                gw_data[<span style="color:#e6db74">&#34;season&#34;</span>] <span style="color:#f92672">=</span> year
+</span></span><span style="display:flex;"><span>                list_of_gws<span style="color:#f92672">.</span>append(gw_data)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">except</span> <span style="color:#a6e22e">Exception</span> <span style="color:#66d9ef">as</span> e:
+</span></span><span style="display:flex;"><span>                logger<span style="color:#f92672">.</span>error(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;Error fetching data for </span><span style="color:#e6db74">{</span>year<span style="color:#e6db74">}</span><span style="color:#e6db74"> gameweek </span><span style="color:#e6db74">{</span>gameweek<span style="color:#e6db74">}</span><span style="color:#e6db74">: </span><span style="color:#e6db74">{</span>e<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> pd<span style="color:#f92672">.</span>concat(list_of_gws)
+</span></span></code></pre></div><p> </p>
+<p>The <code>get_training_data</code> function outputs a dataframe from which we can start calculating features (the stats we&rsquo;ll be training our model on), which looks the same as the per-gameweek level data, except with season and gameweek specified, like so:</p>
+<p> </p>
+<table>
+  <thead>
+      <tr>
+          <th style="text-align: left">name</th>
+          <th style="text-align: left">total_points</th>
+          <th style="text-align: left">season</th>
+          <th style="text-align: left">gameweek</th>
+          <th style="text-align: left"><em>etc.</em></th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td style="text-align: left">Femi Seriki</td>
+          <td style="text-align: left">0</td>
+          <td style="text-align: left">2022-23</td>
+          <td style="text-align: left">1</td>
+          <td style="text-align: left">&hellip;</td>
+      </tr>
+      <tr>
+          <td style="text-align: left">Jack Hinshelwood</td>
+          <td style="text-align: left">0</td>
+          <td style="text-align: left">2022-23</td>
+          <td style="text-align: left">1</td>
+          <td style="text-align: left">&hellip;</td>
+      </tr>
+      <tr>
+          <td style="text-align: left">Jadon Sancho</td>
+          <td style="text-align: left">1</td>
+          <td style="text-align: left">2022-23</td>
+          <td style="text-align: left">1</td>
+          <td style="text-align: left">&hellip;</td>
+      </tr>
+      <tr>
+          <td style="text-align: left">Rhys Norrington-Davies</td>
+          <td style="text-align: left">0</td>
+          <td style="text-align: left">2022-23</td>
+          <td style="text-align: left">1</td>
+          <td style="text-align: left">&hellip;</td>
+      </tr>
+      <tr>
+          <td style="text-align: left">Vitaly Janelt</td>
+          <td style="text-align: left">2</td>
+          <td style="text-align: left">2022-23</td>
+          <td style="text-align: left">1</td>
+          <td style="text-align: left">&hellip;</td>
+      </tr>
+      <tr>
+          <td style="text-align: left">&hellip;</td>
+          <td style="text-align: left">&hellip;</td>
+          <td style="text-align: left">&hellip;</td>
+          <td style="text-align: left">&hellip;</td>
+          <td style="text-align: left">&hellip;</td>
+      </tr>
+  </tbody>
+</table>
+<p> </p>
+<p>We&rsquo;re also adding context of who the opposing team is, as this will later be helpful for calculating features that relate to the opposing team&rsquo;s performance.</p>
+<p> </p>
+<hr>
+<p> </p>
+<h1 id="the-tooling">The tooling</h1>
+<p>While I can get by in Python, I’d come to my first ML project pretty damn fresh. I hadn’t ever got round to tinkering with sklearn; I thought that a feature is any film shown at the cinema; and I’d have bet money that a hyperparameter is a gadget Anikin would want to buy in the back-alleys of Tatooine.</p>
+<p>Therefore, to actually figure out how to train a model, I’d need a mentor, I’d need an idiot-proof ML library, and I’d need compute.</p>
+<h3 id="the-mentor">The mentor</h3>
+<p>Luckily for me, I already knew of a wise companion called <a href="https://chat.openai.com/">ChatGPT</a>: my very own machine learning Shifu, who explains concepts simply and demonstrates them through code.</p>
+<p>Whether quickly plotting graphs in matplotlib or seaborn; providing in-depth explanations of different metrics to let you know how well a model is performing; or refactoring code to be more performant, I can’t emphasise how much of a help ChatGPT has been, and it meant I’d trained my first model in a matter of days instead of a matter of months.</p>
+<p><em>[I’ll eventually follow up with a post on how to use ChatGPT effectively as a coding buddy and mentor, and I’ve included a few example prompts I used in the next post.]</em></p>
+<h3 id="the-idiot-proof-machine-learning-library">The idiot-proof machine learning library</h3>
+<p>Around the time I started on this project, I also happened to stumble across a NeurIPS roundup article with reference to <a href="https://autogluon.github.io/neurips-autogluon-workshop/">AutoGluon</a> - a state of the art AutoML library. It promised to do all of the heavy lifting for me, and quickly won me over with a super easy “<a href="https://auto.gluon.ai/stable/tutorials/tabular/tabular-quick-start.html">get started</a>“ guide.</p>
+<p>Fast forward a few weeks, and I’m still hugely impressed at how easy it is to run your first ML project using AutoGluon. With some data and some basic Python, anyone can run state-of-the-art ML models with great results.</p>
+<h3 id="the-compute">The compute</h3>
+<p>Lastly, as I was browsing through a few other people’s attempts at the same challenge on GitHub for inspiration, I found a reference to <a href="https://colab.google/">Google Colab</a>, which offers a free instance that has superior disk space to my work laptop, 12gb memory, and a GPU. That meant that while all of the pre-processing was done on my laptop, I could leave the model training in the Colab notebook in the background, without affecting my work.</p>
+<p> </p>
+<hr>
+<p> </p>
+<h1 id="the-pipeline-so-far">The pipeline so far</h1>
+<p>Put all the above together, and we have the setup needed to train our very own football-learning machine monster.</p>
+<p>Here&rsquo;s the rough pipeline of our setup so far:</p>
+<p> </p>
+<p><img src="flow.png" alt="Flow diagram"></p>
+<p> </p>
+<p>In the next post, I’ll cover <em>feature selection</em>: how we can choose stats that give the machine learning model the best chance of predicting points accurately.</p>
+
+</article>
+
+            </div>
+        </main>
+    </body></html>
