@@ -1,0 +1,7 @@
+# Ignore everything
+*
+# Except this folder
+!docs
+# But still ignore files inside .git folders
+!.gitignore
+

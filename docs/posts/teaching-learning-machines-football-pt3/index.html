@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en-gb"><head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="/css/styles.css">
+   <meta name="description" content="First day on the training ground: our first shot at training FPL&rsquo;s very own mystic meg using machine learning
+See the Github repo here and the previous blog posts here and here.
+TODO
+How do we know which features are helpful?
+Helpfully for us, there&rsquo;s known approaches to interpretability, or our ability to know what&rsquo;s going on under the hood of the model.
+In this case, once our model is trained in the next post, there&rsquo;s a function from AutoGluon called predictor.feature_importance() which we&rsquo;ll use to better understand the specific importance of each feature.">  
+
+  <title>
+    
+      Teaching learning machines football pt.3
+    
+  </title>
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/" />
+  
+  
+</head>
+<body a="auto">
+        <main class="page-content" aria-label="Content">
+            <div class="w">
+<a href="/">Данияр ⇄ Dani</a>
+
+<span style="float:right;">
+    <time datetime="2024-03-20 12:51:48 &#43;0000 UTC">
+        2024-03-20
+    </time>
+</span>
+</br>
+</br>
+</br>
+<article>
+
+    <h1>Teaching learning machines football pt.3</h1>
+    
+
+    <h3 id="first-day-on-the-training-ground-our-first-shot-at-training-fpl"><em>First day on the training ground: our first shot at training FPL&rsquo;s very own mystic meg using machine learning</em></h3>
+<p><em>See the Github repo <a href="https://github.com/danismailov/fpl-with-fml">here</a> and the previous blog posts <a href="/posts/teaching-learning-machines-football-pt2">here</a> and <a href="/posts/teaching-learning-machines-football">here</a>.</em></p>
+<h1 id="todo"><code>TODO</code></h1>
+<h2 id="how-do-we-know-which-features-are-helpful">How do we know which features are helpful?</h2>
+<p>Helpfully for us, there&rsquo;s known approaches to <em><strong>interpretability</strong></em>, or our ability to know what&rsquo;s going on under the hood of the model.</p>
+<p>In this case, once our model is trained in the next post, there&rsquo;s a function from AutoGluon called <code>predictor.feature_importance()</code> which we&rsquo;ll use to better understand the specific importance of each feature.</p>
+<h3 id="how-do-we-know-how-useful-each-stat-could-be"><em>How do we know how useful each stat could be?</em></h3>
+<p>You might already have some inklings about a few of the FPL stats above. For example:</p>
+<ul>
+<li>
+<p><em><strong>Transfers</strong></em> (both in or out) might be a great proxy for public &ldquo;hunches&rdquo; about players who are outperforming or underperforming their usual form, which isn&rsquo;t always be obvious from the data.</p>
+</li>
+<li>
+<p>On the flip side, <code>penalties_missed</code> isn&rsquo;t very indicative of relative form, as most players across most games wouldn&rsquo;t even dream of taking a penalty, meaning this stat would be a desperately boring 0.</p>
+</li>
+</ul>
+<p>Luckily, there&rsquo;s a scientific way to interpret exactly how much predictive power each feature has, which I&rsquo;ll come onto in the next post (yes I&rsquo;m hoping that <a href="https://explained.ai/rf-importance/">permutation importance</a> works as a nerdy hook for the next instalment in the series..).</p>
+<h3 id="missing-values">Missing values</h3>
+<p>Using the following snippet for the <code>count_na</code> function, which counts the number of missing values across each of the 42 columns, we can also see how missing values are distributed amongst the columns:</p>
+<p> </p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">count_na</span>(data):
+</span></span><span style="display:flex;"><span>    na_count <span style="color:#f92672">=</span> data<span style="color:#f92672">.</span>isna()<span style="color:#f92672">.</span>sum()
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">with</span> pd<span style="color:#f92672">.</span>option_context(<span style="color:#e6db74">&#39;display.max_rows&#39;</span>, <span style="color:#66d9ef">None</span>,
+</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">&#39;display.max_columns&#39;</span>, <span style="color:#66d9ef">None</span>,
+</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">&#39;display.precision&#39;</span>, <span style="color:#ae81ff">3</span>):
+</span></span><span style="display:flex;"><span>        print(na_count)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>count_na(data<span style="color:#f92672">=</span>gw_rows)
+</span></span></code></pre></div><p>Output:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#75715e"># Column name                       # Missing values</span>
+</span></span><span style="display:flex;"><span>name                                               <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>assists                                            <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>bonus                                              <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>bps                                                <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>clean_sheets                                       <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>creativity                                         <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>element                                            <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>fixture                                            <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>goals_conceded                                     <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>goals_scored                                       <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>ict_index                                          <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>influence                                          <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>kickoff_time                                       <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>minutes                                            <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>opponent_team                                      <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>own_goals                                          <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>penalties_missed                                   <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>penalties_saved                                    <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>red_cards                                          <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>round                                              <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>saves                                              <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>selected                                           <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>team_a_score                                      <span style="color:#ae81ff">59</span>
+</span></span><span style="display:flex;"><span>team_h_score                                      <span style="color:#ae81ff">59</span>
+</span></span><span style="display:flex;"><span>threat                                             <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>total_points                                       <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>transfers_balance                                  <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>transfers_in                                       <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>transfers_out                                      <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>value                                              <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>was_home                                           <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>yellow_cards                                       <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>opponent                                           <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>season                                             <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>position                                       <span style="color:#ae81ff">16556</span>
+</span></span><span style="display:flex;"><span>team                                           <span style="color:#ae81ff">16556</span>
+</span></span><span style="display:flex;"><span>xP                                             <span style="color:#ae81ff">16556</span>
+</span></span><span style="display:flex;"><span>expected_assists                               <span style="color:#ae81ff">66368</span>
+</span></span><span style="display:flex;"><span>expected_goal_involvements                     <span style="color:#ae81ff">66368</span>
+</span></span><span style="display:flex;"><span>expected_goals                                 <span style="color:#ae81ff">66368</span>
+</span></span><span style="display:flex;"><span>expected_goals_conceded                        <span style="color:#ae81ff">66368</span>
+</span></span><span style="display:flex;"><span>starts                                         <span style="color:#ae81ff">66368</span>
+</span></span></code></pre></div><h1 id="next-blog-post--training-our-first-model-on-fpl-data">Next blog post – Training our first model on FPL data</h1>
+<ul>
+<li>Hyperparameter tuning</li>
+<li>Further tweaking of the training data - e.g. filtering number of players to train on ones that play
+<ul>
+<li><em>[Violin Plot]</em>
+While it&rsquo;s some complicated shenanigans that underpins this (<a href="https://explained.ai/rf-importance/">see here</a> for a more technical explanation of permutation importance), this effectively shuffles the values of one feature, to see how this affects the accuracy of the model.</li>
+</ul>
+</li>
+</ul>
+
+</article>
+
+            </div>
+        </main>
+    </body></html>
